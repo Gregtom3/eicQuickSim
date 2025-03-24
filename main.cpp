@@ -1,5 +1,6 @@
 #include <TH1F.h>
 #include <TCanvas.h>
+#include <TRandom.h>
 
 int main() {
     TH1F *h = new TH1F("h", "Sample Histogram", 100, -4, 4);
