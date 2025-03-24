@@ -12,7 +12,7 @@
  #include "FileManager.h"
  #include <iostream>
  
- int test01_grabFiles()
+ int main()
  {
      // Initialize the FileManager with your data file listing all the .root files
      FileManager fm("en_files.dat");
