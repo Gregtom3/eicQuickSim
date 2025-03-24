@@ -3,12 +3,15 @@
 # Directory for CMake build
 BUILD_DIR = build
 
+# NOTE: This Makefile expects to be run inside the eic-shell environment,
+# which provides the appropriate ROOT instance.
+
 # Install Python requirements
 install:
 	pip install --upgrade pip && \
 	pip install -r requirements.txt
 
-# Configure + build C++ ROOT code using CMake
+# Configure and build C++ ROOT code using CMake
 build:
 	@mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake .. && make
@@ -21,5 +24,5 @@ run: build
 clean:
 	rm -rf $(BUILD_DIR)
 
-# All: install Python + build C++
+# All: install Python requirements and build C++ code
 all: install build

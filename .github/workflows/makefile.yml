@@ -8,9 +8,7 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-20.04
-
 
     steps:
     - uses: actions/checkout@v4
@@ -20,24 +18,25 @@ jobs:
       with:
         python-version: 3.10.16 
 
-    - name: Install ROOT w/ dependencies
+    - name: Install dependencies and eic-shell
       run: |
         sudo apt-get update
-        sudo apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev libxft-dev libxext-dev
-        wget https://root.cern/download/root_v6.34.04.Linux-ubuntu20.04-x86_64-gcc9.4.tar.gz
-        tar -xzf root_v6.34.04.Linux-ubuntu20.04-x86_64-gcc9.4.tar.gz
+        sudo apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev libxft-dev libxext-dev wget singularity-container
+        curl -L https://github.com/eic/eic-shell/raw/main/install.sh | bash
 
-    - name: Build project
+    - name: Build project inside eic-shell
       run: |
-        source root/bin/thisroot.sh
+        ./eic-shell << 'EOF'
         make all
+        EOF
 
-    - name: Run project
+    - name: Run project inside eic-shell
       run: |
-        source root/bin/thisroot.sh
+        ./eic-shell << 'EOF'
         make run
+        EOF
 
-    - name: Upload histogram
+    - name: Upload histogram artifact
       uses: actions/upload-artifact@v4
       with:
         name: hist-output
