@@ -19,8 +19,23 @@ jobs:
       with:
         python-version: 3.10.16 
 
-    - name: configure
-      run: ./configure
+    - name: Install ROOT dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev libxft-dev libxext-dev
+        wget https://root.cern/download/root_v6.30.06.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz
+        tar -xzf root_v6.30.06.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz
+        echo "source $PWD/root/bin/thisroot.sh" >> $GITHUB_ENV
+        source $PWD/root/bin/thisroot.sh
 
-    - name: Install dependencies
-      run: make
+    - name: Build project
+      run: |
+        source $GITHUB_ENV
+        mkdir build && cd build
+        cmake ..
+        make
+
+    - name: Run executable
+      run: |
+        source $GITHUB_ENV
+        ./build/main
