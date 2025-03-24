@@ -9,7 +9,8 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+
 
     steps:
     - uses: actions/checkout@v4
@@ -23,8 +24,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev libxft-dev libxext-dev
-        wget https://root.cern/download/root_v6.30.06.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz
-        tar -xzf root_v6.30.06.Linux-ubuntu22.04-x86_64-gcc11.4.tar.gz
+        wget https://root.cern/download/root_v6.34.04.Linux-ubuntu20.04-x86_64-gcc9.4.tar.gz
+        tar -xzf root_v6.34.04.Linux-ubuntu20.04-x86_64-gcc9.4.tar.gz
         echo "source $PWD/root/bin/thisroot.sh" >> $GITHUB_ENV
         source $PWD/root/bin/thisroot.sh
 
