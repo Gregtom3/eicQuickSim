@@ -28,10 +28,10 @@ jobs:
           squashfs-tools \
           squashfuse \
           fuse2fs \
+          fuse3 \
           fuse-overlayfs \
           cryptsetup \
           curl \
-          fuse \
           libfuse-dev \
           git \
           uuid-dev \
