@@ -85,7 +85,12 @@ public:
     std::vector<std::string> getFiles(int eEnergy, int hEnergy,
                                       int q2Min, int q2Max,
                                       int nFilesRequested) const;
-
+    /**
+     * Return up to nRows of CSV data for the given (e,h,q2Min,q2Max).
+     * This includes nEvents, crossSection, etc.
+     */
+     std::vector<CSVRow> getCSVData(int eEnergy, int hEnergy, int q2Min, int q2Max,
+        int nRowsRequested) const;
 private:
     /**
      * Internal map: (e, h, q2Min, q2Max) -> all CSVRows for that group

@@ -16,8 +16,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/eicQuickSim)
 add_executable(test00_readData
     src/tests/test00_readData.C
 )
-
-# Link test00_readData with ROOT and HepMC3 libs
 target_link_libraries(
     test00_readData
     PRIVATE
@@ -29,19 +27,28 @@ target_link_libraries(
 # ----------------------------------------------------------------------------
 # test01_grabFiles
 # ----------------------------------------------------------------------------
-# If test01_grabFiles uses your FileManager code, list it here:
 add_executable(test01_grabFiles
     src/tests/test01_grabFiles.C
     src/eicQuickSim/FileManager.C
 )
-
-# If test01_grabFiles only depends on ROOT (for TFile/TTree), link that.
-# If it doesn't need HepMC3, you can skip that link. Adjust as necessary.
 target_link_libraries(
     test01_grabFiles
     PRIVATE
         ${ROOT_LIBRARIES}
 )
+
+# ----------------------------------------------------------------------------
+# test02_dataSummary
+# ----------------------------------------------------------------------------
+add_executable(test02_dataSummary
+    src/tests/test02_dataSummary.C
+    src/eicQuickSim/FileManager.C
+    src/eicQuickSim/FileDataSummary.C
+)
+
+target_link_libraries(test02_dataSummary PRIVATE ${ROOT_LIBRARIES})
+
+add_test(NAME dataSummaryTest COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test02_dataSummary)
 
 # ----------------------------------------------------------------------------
 # Enable CTest and define each test

@@ -141,3 +141,26 @@ CSVRow FileManager::parseLine(const std::string &line) const
 
     return row;
 }
+
+/**
+    * Return up to nRows of CSV data for the given (e,h,q2Min,q2Max).
+    * This includes nEvents, crossSection, etc.
+    */
+std::vector<CSVRow> FileManager::getCSVData(int eEnergy, int hEnergy,
+                                            int q2Min, int q2Max,
+                                            int nRowsRequested) const
+{
+    EnergyQ2Key key { eEnergy, hEnergy, q2Min, q2Max };
+    auto it = csvMap_.find(key);
+    if (it == csvMap_.end() || it->second.empty()) {
+        // Return empty if no match
+        return {};
+    }
+    const auto &rows = it->second;
+    int total = static_cast<int>(rows.size());
+    if (nRowsRequested <= 0 || nRowsRequested > total) {
+        nRowsRequested = total;
+    }
+    // Copy the first nRowsRequested rows
+    return std::vector<CSVRow>(rows.begin(), rows.begin() + nRowsRequested);
+}

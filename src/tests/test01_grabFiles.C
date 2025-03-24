@@ -8,7 +8,6 @@
  #include <vector>
  
  int main() {
-     // Suppose we have "summary.csv" in the same directory
      FileManager fm("src/eicQuickSim/en_files.csv");
  
      // Let's try to get 5 files for e=10, h=100, Q2=10..100
