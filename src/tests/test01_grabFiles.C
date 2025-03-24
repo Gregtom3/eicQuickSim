@@ -15,7 +15,7 @@
  int main()
  {
      // Initialize the FileManager with your data file listing all the .root files
-     FileManager fm("en_files.dat");
+     FileManager fm("src/eicQuickSim/en_files.dat");
  
      // Let's request 5 files from the 18x275, q2_100to1000 group
      // If fewer than 5 exist, we just get them all
