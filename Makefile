@@ -23,12 +23,13 @@ test00: build
 test01: build
 	./$(BUILD_DIR)/test01_grabFiles
 
+# Run the new test01_grabFiles
+test02: build
+	./$(BUILD_DIR)/test02_dataSummary
+
 # Run all CTest-based tests (both test00 and test01, plus any others)
 tests: build
 	cd $(BUILD_DIR) && ctest --verbose
-
-# Just a convenience target if you want to run one of them quickly
-run: test01
 
 # Clean the build directory
 clean:

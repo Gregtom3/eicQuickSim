@@ -51,9 +51,9 @@ jobs:
         make all
         EOF
 
-    - name: Run inside eic-shell
+    - name: Run tests in eic-shell
       run: |
         ./eic-shell <<'EOF'
-        make run
+        make test00 test01 test02
         EOF
 
