@@ -8,7 +8,6 @@ BUILD_DIR = build
 
 # Install Python requirements
 install:
-	pip install --upgrade pip && \
 	pip install -r requirements.txt
 
 # Configure and build C++ ROOT code using CMake
