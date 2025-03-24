@@ -1,114 +1,143 @@
 #include "FileManager.h"
-#include <iostream>
 #include <fstream>
-#include <regex>
+#include <iostream>
+#include <sstream> // for std::stringstream
 
-/**
- * Constructs a FileManager by reading every line from the given file.
- * Each line is expected to be a path to a .root file with a structure like:
- *   .../18x275/q2_100to1000/..._run098.ab.hepmc3.tree.root
- * We parse out the (energy, q2Range, runNumber) and store them.
- */
-FileManager::FileManager(const std::string &filename)
+FileManager::FileManager(const std::string &csvPath)
 {
-    std::ifstream infile(filename);
+    std::ifstream infile(csvPath);
     if (!infile.is_open()) {
-        std::cerr << "[FileManager] Error: Could not open " << filename << std::endl;
+        std::cerr << "[FileManager] Error opening CSV: " << csvPath << std::endl;
         return;
     }
 
     std::string line;
+    bool isHeader = true;
     while (std::getline(infile, line)) {
-        // Skip lines if they're empty or just whitespace
-        if (line.empty()) continue;
-
-        // Parse the line
-        FileInfo fi = parseFileLine(line);
-
-        // If parseFileLine returned something sensible, store it in the map
-        // (We rely on an "UNKNOWN" check or runNumber < 0 if it fails)
-        if (fi.runNumber >= 0 && fi.energyConfig != "UNKNOWN" && fi.q2Range != "UNKNOWN") {
-            EnergyQ2Key key { fi.energyConfig, fi.q2Range };
-            fileMap_[key].push_back(fi);
+        // If there's a header row, skip it
+        if (isHeader) {
+            isHeader = false;
+            continue;
         }
+
+        // Empty line check
+        if (line.empty()) {
+            continue;
+        }
+
+        // Parse the CSV row
+        CSVRow row = parseLine(line);
+        // If the parse was invalid, skip
+        if (row.filename.empty()) {
+            // parseLine might return an empty filename on error
+            continue;
+        }
+
+        // Build the map key
+        EnergyQ2Key key {
+            row.eEnergy,
+            row.hEnergy,
+            row.q2Min,
+            row.q2Max
+        };
+
+        // Add to the vector for that key
+        csvMap_[key].push_back(row);
     }
 }
 
 /**
- * Returns up to nFiles for the specified (energyConfig, q2Range).
- * If you ask for more than exist (or a negative value), we'll just return them all.
- * If the key doesn't exist, we log an error and return an empty vector.
+ * Return up to nFiles from the (e, h, q2Min, q2Max) group.
+ * If that group doesn't exist, or is empty, we return empty.
  */
-std::vector<std::string> FileManager::getFiles(const std::string &energyConfig,
-                                               const std::string &q2Range,
+std::vector<std::string> FileManager::getFiles(int eEnergy, int hEnergy,
+                                               int q2Min, int q2Max,
                                                int nFilesRequested) const
 {
-    // Build the key for lookup
-    EnergyQ2Key key { energyConfig, q2Range };
+    EnergyQ2Key key { eEnergy, hEnergy, q2Min, q2Max };
 
-    // See if we have an entry
-    auto it = fileMap_.find(key);
-    if (it == fileMap_.end()) {
-        std::cerr << "[FileManager] Error: No files found for energy="
-                  << energyConfig << ", q2Range=" << q2Range << std::endl;
+    auto it = csvMap_.find(key);
+    if (it == csvMap_.end()) {
+        std::cerr << "[FileManager] No CSV entries for e=" << eEnergy
+                  << ", h=" << hEnergy
+                  << ", Q2=" << q2Min << ".." << q2Max << std::endl;
         return {};
     }
 
-    const auto &fileList = it->second;
-    if (fileList.empty()) {
-        std::cerr << "[FileManager] Warning: Entry found for ("
-                  << energyConfig << ", " << q2Range << ") but it's empty?" << std::endl;
+    const auto &rows = it->second;
+    if (rows.empty()) {
+        std::cerr << "[FileManager] Found empty group for e=" << eEnergy
+                  << ", h=" << hEnergy
+                  << ", Q2=" << q2Min << ".." << q2Max << std::endl;
         return {};
     }
 
     // Decide how many to return
-    int total = static_cast<int>(fileList.size());
+    int total = static_cast<int>(rows.size());
     if (nFilesRequested <= 0 || nFilesRequested > total) {
         nFilesRequested = total;
     }
 
-    // Build the result vector, prepending "root://dtn-eic.jlab.org/"
-    // so they can be read from that server
+    // Build the result vector
     std::vector<std::string> results;
     results.reserve(nFilesRequested);
     for (int i = 0; i < nFilesRequested; ++i) {
-        const auto &fullPath = fileList[i].fullPath;
-        results.push_back("root://dtn-eic.jlab.org/" + fullPath);
+        results.push_back(rows[i].filename);
     }
-
     return results;
 }
 
 /**
- * Attempts to parse a line with a path like:
- *   /volatile/eic/.../18x275/q2_100to1000/..._run098.ab.hepmc3.tree.root
- * using a regex that captures:
- *   - The beam energies: (\d+x\d+)
- *   - The Q2 range: (\d+to\d+)
- *   - The run number: (\d+)
+ * Parse a CSV line:
+ *   filename, Q2_min, Q2_max, electron_energy, hadron_energy, n_events, cross_section_pb
  */
-FileInfo FileManager::parseFileLine(const std::string &line) const
+CSVRow FileManager::parseLine(const std::string &line) const
 {
-    FileInfo info;
-    info.fullPath = line;
-    info.runNumber = -1;      // If parse fails, we leave it negative
-    info.energyConfig = "UNKNOWN";
-    info.q2Range = "UNKNOWN";
+    CSVRow row;
+    row.filename.clear(); // make sure default is empty
 
-    // Regex to match e.g. "18x275", "q2_100to1000", runNNN
-    // Adjust if your real path format differs
-    static const std::regex pattern(
-        R"(.*\/(\d+x\d+)\/q2_(\d+to\d+)\/.*_run(\d+)\.ab\.hepmc3\.tree\.root$)"
-    );
+    std::stringstream ss(line);
+    std::string token;
 
-    std::smatch matches;
-    if (std::regex_match(line, matches, pattern)) {
-        info.energyConfig = matches[1].str(); // e.g. "18x275"
-        info.q2Range      = matches[2].str(); // e.g. "100to1000"
-        info.runNumber    = std::stoi(matches[3].str()); // e.g. 98
-    } else {
-        std::cerr << "[FileManager] Warning: Could not parse this line:\n  " << line << std::endl;
+    // We'll read 7 columns
+    // If the CSV has more/fewer, handle carefully
+    std::vector<std::string> fields;
+    while (std::getline(ss, token, ',')) {
+        fields.push_back(token);
     }
 
-    return info;
+    if (fields.size() < 7) {
+        std::cerr << "[FileManager] Malformed CSV line (need 7 cols): " << line << std::endl;
+        return row; // row.filename stays empty => invalid
+    }
+
+    try {
+        // 0) filename
+        row.filename = fields[0];
+
+        // 1) Q2_min
+        row.q2Min = std::stoi(fields[1]);
+
+        // 2) Q2_max
+        row.q2Max = std::stoi(fields[2]);
+
+        // 3) electron_energy
+        row.eEnergy = std::stoi(fields[3]);
+
+        // 4) hadron_energy
+        row.hEnergy = std::stoi(fields[4]);
+
+        // 5) n_events
+        row.nEvents = std::stoll(fields[5]);
+
+        // 6) cross_section_pb
+        row.crossSectionPb = std::stod(fields[6]);
+    } catch (const std::exception &e) {
+        std::cerr << "[FileManager] CSV parse error: " << e.what()
+                  << " on line: " << line << std::endl;
+        // Return row with empty filename => invalid
+        row.filename.clear();
+    }
+
+    return row;
 }

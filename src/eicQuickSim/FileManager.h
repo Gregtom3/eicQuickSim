@@ -6,92 +6,96 @@
 #include <unordered_map>
 
 /**
- * Simple struct holding parsed info about a file entry:
- * - The original file path (e.g. /volatile/eic/.../q2_100to1000/..._run098.ab.hepmc3.tree.root)
- * - The energy configuration (like "18x275")
- * - The Q² range (like "100to1000")
- * - The run number (e.g. 98)
+ * Holds the information from each CSV row:
+ *  - filename          e.g. root://dtn-eic.jlab.org//some/path.root
+ *  - q2Min, q2Max      integer Q2 range
+ *  - eEnergy, hEnergy  integer beam energies
+ *  - nEvents           how many events in that file
+ *  - crossSectionPb    cross section in pb
  */
-struct FileInfo {
-    std::string fullPath;
-    std::string energyConfig;
-    std::string q2Range;
-    int         runNumber;
+struct CSVRow {
+    std::string filename;
+    int         q2Min;
+    int         q2Max;
+    int         eEnergy;
+    int         hEnergy;
+    long long   nEvents;
+    double      crossSectionPb;
 };
 
 /**
- * Key used to look up groups of files in a map.
- * This pairs the energy configuration (e.g. "18x275")
- * with the Q² range (e.g. "100to1000").
+ * Key structure used to group CSVRows by (e, h, q2Min, q2Max).
+ * This allows quick lookups if the user wants "all files for e=10, h=100, Q2=10..100".
  */
 struct EnergyQ2Key {
-    std::string energy;
-    std::string q2Range;
+    int eEnergy;
+    int hEnergy;
+    int q2Min;
+    int q2Max;
 
-    // Equality operator for use in an unordered_map.
     bool operator==(const EnergyQ2Key &other) const {
-        return (energy == other.energy && q2Range == other.q2Range);
+        return (eEnergy == other.eEnergy &&
+                hEnergy == other.hEnergy &&
+                q2Min   == other.q2Min   &&
+                q2Max   == other.q2Max);
     }
 };
 
 /**
- * Hash functor that allows us to use EnergyQ2Key as a key
- * in an unordered_map. Combines the hash of the energy and q2Range.
+ * Hash functor for EnergyQ2Key, so we can store it in an unordered_map.
  */
 struct EnergyQ2KeyHash {
     std::size_t operator()(const EnergyQ2Key &k) const {
-        // Basic string hash combination
-        static std::hash<std::string> hasher;
-        auto h1 = hasher(k.energy);
-        auto h2 = hasher(k.q2Range);
-        // Mix them up to reduce collisions
-        return h1 ^ (h2 + 0x9e3779b97f4a7c15ULL + (h1 << 6) + (h1 >> 2));
+        // Simple approach: combine the four ints in a basic way
+        // More robust mixing is possible, but let's keep it readable
+        // We'll shift + XOR
+        auto h1 = std::hash<int>()(k.eEnergy);
+        auto h2 = std::hash<int>()(k.hEnergy);
+        auto h3 = std::hash<int>()(k.q2Min);
+        auto h4 = std::hash<int>()(k.q2Max);
+
+        std::size_t combined = h1;
+        combined ^= (h2 + 0x9e3779b97f4a7c15ULL + (combined << 6) + (combined >> 2));
+        combined ^= (h3 + 0x9e3779b97f4a7c15ULL + (combined << 6) + (combined >> 2));
+        combined ^= (h4 + 0x9e3779b97f4a7c15ULL + (combined << 6) + (combined >> 2));
+
+        return combined;
     }
 };
 
 /**
- * The FileManager class reads a list of root file paths (e.g. from "en_files.dat"),
- * parses each path to extract metadata, and stores them in a lookup table.
- * Clients can request subsets of files based on energy config, Q² range, and file count.
+ * The FileManager class now reads a CSV file (e.g. summary.csv),
+ * and provides a getFiles(...) method to retrieve up to N filenames
+ * for the chosen energies and Q² bin.
  */
 class FileManager {
 public:
     /**
-     * @param filename Path to a file containing lines of absolute ROOT file paths.
-     *                 Example line:
-     *                   /volatile/eic/EPIC/EVGEN/.../18x275/q2_100to1000/...run098.ab.hepmc3.tree.root
+     * @param csvPath Path to a CSV file containing lines of:
+     *        filename,q2Min,q2Max,eEnergy,hEnergy,nEvents,crossSectionPb
      */
-    FileManager(const std::string &filename);
+    FileManager(const std::string &csvPath);
 
     /**
-     * Get up to nFiles matching the specified energy config (e.g. "18x275") and
-     * Q² range (e.g. "100to1000"). If nFiles <= 0 or exceeds the total matching count,
-     * return ALL matching files.
+     * Retrieves up to nFiles matching the given (eEnergy, hEnergy, q2Min, q2Max).
+     * If nFiles <= 0 or > total available, returns them all.
      *
-     * @param energyConfig  String describing beam energies (like "18x275").
-     * @param q2Range       String describing Q² bracket (like "100to1000").
-     * @param nFilesRequested How many files to retrieve. Negative or larger than available => get them all.
-     * @return A vector of full paths with "root://dtn-eic.jlab.org/" prefixed if found. Empty if none found.
+     * @return A vector of file paths (filename). Returns empty if no match is found.
      */
-    std::vector<std::string> getFiles(const std::string &energyConfig,
-                                      const std::string &q2Range,
+    std::vector<std::string> getFiles(int eEnergy, int hEnergy,
+                                      int q2Min, int q2Max,
                                       int nFilesRequested) const;
 
 private:
     /**
-     * Map from (energy, q2Range) -> list of FileInfo objects.
-     * This allows us to quickly find files relevant to a specific beam setup & Q² range.
+     * Internal map: (e, h, q2Min, q2Max) -> all CSVRows for that group
      */
-    std::unordered_map<EnergyQ2Key, std::vector<FileInfo>, EnergyQ2KeyHash> fileMap_;
+    std::unordered_map<EnergyQ2Key, std::vector<CSVRow>, EnergyQ2KeyHash> csvMap_;
 
     /**
-     * Internal helper that takes a single line (file path) and extracts:
-     *  - energyConfig (like "18x275")
-     *  - q2Range (like "100to1000")
-     *  - runNumber
-     *  - fullPath (the original line)
+     * Helper function to parse a single CSV line and produce a CSVRow.
      */
-    FileInfo parseFileLine(const std::string &line) const;
+    CSVRow parseLine(const std::string &line) const;
 };
 
 #endif // FILEMANAGER_H
