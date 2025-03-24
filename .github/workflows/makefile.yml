@@ -14,25 +14,43 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.10.16 
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.10.16 
+        python-version: 3.10.16
 
-    - name: Install dependencies and eic-shell
+    - name: Install dependencies and Apptainer manually
       run: |
         sudo apt-get update
-        sudo apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev libxft-dev libxext-dev wget apptainer
+        sudo apt-get install -y \
+          build-essential \
+          libseccomp-dev \
+          pkg-config \
+          squashfs-tools \
+          cryptsetup \
+          curl \
+          fuse \
+          libfuse-dev \
+          git \
+          uuid-dev \
+          cmake
+
+        export VERSION=1.2.5
+        wget https://github.com/apptainer/apptainer/releases/download/v${VERSION}/apptainer_${VERSION}_amd64.deb
+        sudo dpkg -i apptainer_${VERSION}_amd64.deb
+
+    - name: Install eic-shell
+      run: |
         curl -L https://github.com/eic/eic-shell/raw/main/install.sh | bash
 
-    - name: Build project inside eic-shell
+    - name: Build inside eic-shell
       run: |
-        ./eic-shell << 'EOF'
+        ./eic-shell <<'EOF'
         make all
         EOF
 
-    - name: Run project inside eic-shell
+    - name: Run inside eic-shell
       run: |
-        ./eic-shell << 'EOF'
+        ./eic-shell <<'EOF'
         make run
         EOF
 
