@@ -26,6 +26,9 @@ jobs:
           libseccomp-dev \
           pkg-config \
           squashfs-tools \
+          squashfuse \
+          fuse2fs \
+          fuse-overlayfs \
           cryptsetup \
           curl \
           fuse \
