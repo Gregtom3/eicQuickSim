@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies and eic-shell
       run: |
         sudo apt-get update
-        sudo apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev libxft-dev libxext-dev wget singularity-container
+        sudo apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev libxft-dev libxext-dev wget apptainer
         curl -L https://github.com/eic/eic-shell/raw/main/install.sh | bash
 
     - name: Build project inside eic-shell
