@@ -61,7 +61,7 @@ int main() {
             std::cout << "-------------------------------------------------------------" << std::endl;
         }
         
-        if (events_parsed > 100) break;
+        if (events_parsed > 10) break;
     }
     
     root_input.close();
