@@ -54,7 +54,10 @@ jobs:
     - name: Run tests in eic-shell
       run: |
         ./eic-shell <<'EOF'
-        make test00 test01 test02 test03
+        make test00_readData
+        make test01_grabFiles
+        make test02_dataSummary
+        make test03_weightHist
         EOF
 
     - name: Upload artifacts

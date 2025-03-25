@@ -1,7 +1,7 @@
-.PHONY: install all build run clean tests test00 test01 test02 test03
+.PHONY: install all build run clean tests test00_readData test01_grabFiles test02_dataSummary test03_weightHist
 
 BUILD_DIR = build
-TESTS = test00 test01 test02 test03
+TESTS = test00_readData test01_grabFiles test02_dataSummary test03_weightHist
 
 # Setup
 install:
