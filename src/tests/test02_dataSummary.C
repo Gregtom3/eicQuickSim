@@ -25,7 +25,7 @@ int main() {
     auto rows_1_10 = fm.getCSVData(10,100,1,10,-1);
     int totalCrossSection_1_10 = summarizer.getTotalCrossSection(rows_1_10);
     double totalLumi_1_10 = summarizer.getTotalLuminosity(rows_1_10);
-    std::cout << "Got " << rows_1_10.size() << " rows, total cross section = " << totalCrossSection_1_10 << std::endl;
+    std::cout << "Got " << rows_1_10.size() << " rows, total cross section = " << totalCrossSection_1_10 << " pb" << std::endl;
     std::cout << "\t " << totalLumi_1_10 << " pb-1" << std::endl;
     
 
@@ -33,24 +33,29 @@ int main() {
     auto rows_10_100 = fm.getCSVData(10,100,10,100,-1);
     int totalCrossSection_10_100 = summarizer.getTotalCrossSection(rows_10_100);
     double totalLumi_10_100 = summarizer.getTotalLuminosity(rows_10_100);
-    std::cout << "Got " << rows_10_100.size() << " rows, total cross section = " << totalCrossSection_10_100 << std::endl;
+    std::cout << "Got " << rows_10_100.size() << " rows, total cross section = " << totalCrossSection_10_100 << " pb" << std::endl;
     std::cout << "\t " << totalLumi_10_100 << " pb-1" << std::endl;
     
     // Step 5: Combine rows_1_10 and rows_10_100
     std::vector<std::vector<CSVRow>> all { rows_1_10, rows_10_100};
+    std::cout << "Combine for all CSV data for e=10, h=100, Q2=1..100" << std::endl;
     auto rows_1_100 = FileManager::combineCSV(all);
     int totalCrossSection_1_100 = summarizer.getTotalCrossSection(rows_1_100);
     double totalLumi_1_100 = summarizer.getTotalLuminosity(rows_1_100);
-    std::cout << "Got " << rows_1_100.size() << " rows, total cross section = " << totalCrossSection_1_100 << std::endl;
+    std::cout << "Got " << rows_1_100.size() << " rows, total cross section = " << totalCrossSection_1_100 << " pb" << std::endl;
     std::cout << "\t " << totalLumi_1_100 << " pb-1" << std::endl;
 
 
     if (totalCrossSection_1_10 + totalCrossSection_10_100 != totalCrossSection_1_100)
     {
-            std::cout << "ERROR: totalCrossSection_1_10 + totalCrossSection_10_100 != totalCrossSection_1_100" << std::endl;
+        std::cout << "ERROR: totalCrossSection_1_10 + totalCrossSection_10_100 != totalCrossSection_1_100" << std::endl;
+    }
+    else
+    {
+        std::cout << "PASS: totalCrossSection_1_10 + totalCrossSection_10_100 == totalCrossSection_1_100" << std::endl;
     }
 
-    
+
 
 
     return 0;

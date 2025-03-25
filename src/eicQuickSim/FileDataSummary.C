@@ -148,7 +148,7 @@ std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows)
     //    sum of nEvents_i * crossSection_i
     double totalLumi = 0.0;
     for (auto &r : rows) {
-        totalLumi += (static_cast<double>(r.nEvents) * r.crossSectionPb);
+        totalLumi += (static_cast<double>(r.nEvents)/r.crossSectionPb);
     }
 
     if (totalLumi <= 0.0) {
@@ -156,10 +156,10 @@ std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows)
         return result;
     }
 
-    // 2) For each row, weight_i = (nEvents_i * crossSection_i) / totalLumi
+    // 2) For each row, weight_i = (nEvents_i/crossSection_i) / totalLumi
     result.reserve(rows.size());
     for (auto &r : rows) {
-        double thisLumi = static_cast<double>(r.nEvents) * r.crossSectionPb;
+        double thisLumi = static_cast<double>(r.nEvents)/r.crossSectionPb;
         double w = thisLumi / totalLumi;
         result.push_back(w);
     }
