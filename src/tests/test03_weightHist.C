@@ -142,6 +142,8 @@ int main() {
     hX->SetLineColor(kRed + 1);
     hX->SetFillColorAlpha(kRed - 9, 0.35);
     hX->SetStats(0);
+    c2->SetLogx();
+    c2->SetLogy();
     hX->Draw("HIST");
     c2->RedrawAxis();
     c2->SaveAs("artifacts/test03_xhist.png");
