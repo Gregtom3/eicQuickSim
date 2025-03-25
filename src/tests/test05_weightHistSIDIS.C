@@ -44,8 +44,8 @@ int main() {
     h_xF_piPlus->SetStats(0);
     
     h_xF_piMinus->SetLineWidth(2);
-    h_xF_piMinus->SetLineColor(kCyan);
-    h_xF_piMinus->SetFillColorAlpha(kCyan-9, 0.35);
+    h_xF_piMinus->SetLineColor(kGreen + 1);
+    h_xF_piMinus->SetFillColorAlpha(kGreen - 9, 0.35);
     h_xF_piMinus->SetStats(0);
     
     // --- Step 4: Process each CSVRow and fill the xF histograms ---
