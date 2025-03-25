@@ -30,6 +30,12 @@ public:
      */
      double getTotalLuminosity(const std::vector<CSVRow>& rows) const;
 
+    /**
+     * Return a list of weights, one per row
+     */
+
+     std::vector<double> getWeights(const std::vector<CSVRow>& rows) const;
+     
 private:
 
     bool checkUniformEnergy(const std::vector<CSVRow>& rows) const;

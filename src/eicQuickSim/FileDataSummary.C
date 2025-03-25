@@ -127,3 +127,42 @@ double FileDataSummary::getTotalLuminosity(const std::vector<CSVRow>& rows) cons
     }
     return totalLumi;
 }
+
+/**
+ * Returns a scaling weight for each file dependent on the total (simulated) integrated luminosity
+*/
+std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows) const
+{
+    std::vector<double> result;
+
+    if (rows.empty()) {
+        return result; // empty input => empty output
+    }
+    if (!checkUniformEnergy(rows)) {
+        // mismatch energies => error
+        std::cerr << "[FileDataSummary] getWeights: Mixed energies => returning empty.\n";
+        return result;
+    }
+
+    // 1) Compute total luminosity:
+    //    sum of nEvents_i * crossSection_i
+    double totalLumi = 0.0;
+    for (auto &r : rows) {
+        totalLumi += (static_cast<double>(r.nEvents) * r.crossSectionPb);
+    }
+
+    if (totalLumi <= 0.0) {
+        std::cerr << "[FileDataSummary] getWeights: total luminosity <= 0 => returning empty.\n";
+        return result;
+    }
+
+    // 2) For each row, weight_i = (nEvents_i * crossSection_i) / totalLumi
+    result.reserve(rows.size());
+    for (auto &r : rows) {
+        double thisLumi = static_cast<double>(r.nEvents) * r.crossSectionPb;
+        double w = thisLumi / totalLumi;
+        result.push_back(w);
+    }
+
+    return result;
+}
