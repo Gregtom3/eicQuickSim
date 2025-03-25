@@ -87,7 +87,7 @@ public:
      * This includes nEvents, crossSection, etc.
      */
      std::vector<CSVRow> getCSVData(int eEnergy, int hEnergy, int q2Min, int q2Max,
-        int nRowsRequested) const;
+        int nRowsRequested, int maxEvents = -1) const;
 
     /**
      * Combine any number of CSVData vectors into one.

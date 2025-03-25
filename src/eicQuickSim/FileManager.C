@@ -148,12 +148,14 @@ CSVRow FileManager::parseLine(const std::string &line) const
     */
 std::vector<CSVRow> FileManager::getCSVData(int eEnergy, int hEnergy,
                                             int q2Min, int q2Max,
-                                            int nRowsRequested) const
+                                            int nRowsRequested,
+                                            int maxEvents) const
 {
     EnergyQ2Key key { eEnergy, hEnergy, q2Min, q2Max };
     auto it = csvMap_.find(key);
     if (it == csvMap_.end() || it->second.empty()) {
-        // Return empty if no match
+        std::cerr << "[FileManager] Error: No CSV entries for e=" << eEnergy
+                  << ", h=" << hEnergy << ", Q2=" << q2Min << ".." << q2Max << std::endl;
         return {};
     }
     const auto &rows = it->second;
@@ -161,8 +163,20 @@ std::vector<CSVRow> FileManager::getCSVData(int eEnergy, int hEnergy,
     if (nRowsRequested <= 0 || nRowsRequested > total) {
         nRowsRequested = total;
     }
-    // Copy the first nRowsRequested rows
-    return std::vector<CSVRow>(rows.begin(), rows.begin() + nRowsRequested);
+    
+    // Copy the requested number of rows.
+    std::vector<CSVRow> result(rows.begin(), rows.begin() + nRowsRequested);
+    
+    // If maxEvents > 0, cap nEvents in each CSVRow to maxEvents.
+    if (maxEvents > 0) {
+        for (auto &row : result) {
+            if (row.nEvents > maxEvents) {
+                row.nEvents = maxEvents;
+            }
+        }
+    }
+    
+    return result;
 }
 
 /**

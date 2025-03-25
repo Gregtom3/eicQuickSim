@@ -28,7 +28,7 @@ test03: build
 	./$(BUILD_DIR)/test03_weightHist
 
 
-# Run all CTest-based tests (both test00 and test01, plus any others)
+# Run all CTest-based tests
 tests: build
 	cd $(BUILD_DIR) && ctest --verbose
 

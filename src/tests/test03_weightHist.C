@@ -6,7 +6,7 @@
 #include "HepMC3/ReaderRootTree.h"
 #include "HepMC3/GenParticle.h"
 #include "TLorentzVector.h"
-#include "TFile.h"
+#include "TCanvas.h"
 #include "TH1D.h"
 
 #include <iostream>
@@ -21,9 +21,10 @@ int main() {
     FileManager fm("src/eicQuickSim/en_files.csv");
     
     std::cout << "Loading CSV data for Q2 ranges: 1-10, 10-100, and 100-1000 for 5x41.\n";
-    auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, -1);
-    auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, -1);
-    auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, -1);
+    const int MAX_EVENTS = 10000;
+    auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, 3, MAX_EVENTS);
+    auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, 3, MAX_EVENTS);
+    auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, 3, MAX_EVENTS);
     
     // Combine all rows into one vector.
     std::vector<std::vector<CSVRow>> groups = { rows_1_10, rows_10_100, rows_100_1000 };
@@ -47,7 +48,7 @@ int main() {
     
     // -----------------------------------------------------------
     // Step 4: Loop over each CSVRow.
-    // For each file, open it and process a fixed number of events (say 10 per file).
+    // For each file, open it and process its events
     // Compute Q2 from the initial and scattered electron four-momenta.
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
@@ -65,7 +66,8 @@ int main() {
         }
         
         int eventsParsed = 0;
-        while (!root_input.failed()) {
+        while (!root_input.failed() && eventsParsed < MAX_EVENTS) {
+            if(eventsParsed%1000==0){std::cout<<"Event " << eventsParsed << std::endl;}
             GenEvent evt;
             root_input.read_event(evt);
             if (root_input.failed()) break;
@@ -113,10 +115,10 @@ int main() {
     
     // -----------------------------------------------------------
     // Step 5: Save the histogram to a ROOT file so it can be uploaded as an artifact.
-    TFile outFile("hQ2.root", "RECREATE");
-    hQ2->Write();
-    outFile.Close();
+    TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
+    hQ2->Draw();
+    c1->SaveAs("hQ2.png");
+    std::cout << "Saved histogram to hQ2.png\n";
     
-    std::cout << "Histogram saved as hQ2.root" << std::endl;
     return 0;
 }
