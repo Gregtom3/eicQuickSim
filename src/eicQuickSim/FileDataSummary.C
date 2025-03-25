@@ -2,6 +2,8 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 
 FileDataSummary::FileDataSummary(const std::string &expLumiCSV)
 {
