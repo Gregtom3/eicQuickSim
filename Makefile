@@ -17,12 +17,16 @@ build:
 
 test00: build
 	./$(BUILD_DIR)/test00_readData
+
 test01: build
 	./$(BUILD_DIR)/test01_grabFiles
+
 test02: build
 	./$(BUILD_DIR)/test02_dataSummary
+
 test03: build
-    ./$(BUILD_DIR)/test03_weightHist
+	./$(BUILD_DIR)/test03_weightHist
+
 
 # Run all CTest-based tests (both test00 and test01, plus any others)
 tests: build
