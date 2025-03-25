@@ -5,6 +5,15 @@
 #include <fstream>
 #include <sstream>
 
+struct PairHash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        std::size_t h1 = std::hash<T1>{}(p.first);
+        std::size_t h2 = std::hash<T2>{}(p.second);
+        return h1 ^ (h2 << 1); // Combine hashes
+    }
+};
+
 FileDataSummary::FileDataSummary(const std::string &expLumiCSV)
 {
     loadExperimentalLum(expLumiCSV);
@@ -181,15 +190,9 @@ double FileDataSummary::getTotalLuminosity(const std::vector<CSVRow>& rows) cons
 
 
 /**
- * getScaledWeights:
- *   1) Ensure uniform (e,h)
- *   2) Compute totalSimLum = sum_i(nEvents_i/crossSection_i)
- *   3) fraction_i = simLum_i / totalSimLum
- *   4) realLum = from realLumMap_ for (e,h)
- *   5) scaledWeight_i = fraction_i * realLum
- *   Returns a vector of that size. If no realLum found, prints error => returns empty.
+ * getWeights
  */
-std::vector<double> FileDataSummary::getScaledWeights(const std::vector<CSVRow>& rows) const
+std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows) const
 {
     std::vector<double> weights;
     if (rows.empty()) {
@@ -212,24 +215,50 @@ std::vector<double> FileDataSummary::getScaledWeights(const std::vector<CSVRow>&
     }
     double realLum = it->second; // experimental luminosity from en_lumi.csv
 
-    // sum up total sim lum
-    double totalSimLum = 0.0;
-    for (auto &r : rows) {
-        totalSimLum += (static_cast<double>(r.nEvents)/r.crossSectionPb);
-    }
-    if (totalSimLum <= 0.0) {
-        std::cerr << "[FileDataSummary] totalSimLum <= 0 => can't scale.\n";
-        return weights;
+
+    // Step 1: Collect total number of events per unique (q2min, q2max)
+    std::unordered_map<std::pair<int, int>, double, PairHash> q2GroupEventCounts;
+    for (const auto& r : rows) {
+        std::pair<int, int> q2key = {r.q2Min, r.q2Max};
+        q2GroupEventCounts[q2key] += static_cast<double>(r.nEvents);
     }
 
-    // build weights
+    // Step 2: Build weights
     weights.reserve(rows.size());
-    for (auto &r : rows) {
-        double thisSimLum = static_cast<double>(r.nEvents)/r.crossSectionPb;
-        double fraction   = thisSimLum / totalSimLum;
-        double scaledW    = fraction * realLum; 
+    for (const auto& r : rows) {
+        double thisSimXsec = r.crossSectionPb;
+        double thisSimEvents = static_cast<double>(r.nEvents);
+        std::pair<int, int> q2key = {r.q2Min, r.q2Max};
+
+        auto it = q2GroupEventCounts.find(q2key);
+        if (it == q2GroupEventCounts.end() || it->second <= 0.0) {
+            weights.push_back(0.0);
+            continue;
+        }
+
+        double thisGroupEvents = it->second;
+
+        // Calculate expected number of events from this file as:
+        double thisExpectedEvents = thisSimXsec * realLum * (thisSimEvents / thisGroupEvents) / q2GroupEventCounts.size();
+
+        // Scale factor
+        double scaledW = thisExpectedEvents / thisSimEvents;
         weights.push_back(scaledW);
     }
+
+
+    // Step 3: Verify that weights reconstruct the expected total luminosity
+    double reconstructedLum = 0.0;
+    for (size_t i = 0; i < rows.size(); ++i) {
+        double weight = weights[i];
+        double simEvents = static_cast<double>(rows[i].nEvents);
+        double expectedEvents = weight * simEvents;
+        double xsec = rows[i].crossSectionPb;
+        double thisLum = expectedEvents / xsec;
+        reconstructedLum += thisLum;
+    }
+    std::cout << "\t [FileDataSummary] Reconstructed Lumi from scaling = " << reconstructedLum << " pb^-1" << std::endl;
+    std::cout << "\t [FileDataSummary] Expected lumi from en_lumi.csv = " << realLum << " pb^-1" << std::endl;
 
     return weights;
 }

@@ -33,13 +33,8 @@ public:
 
     /**
      * Return a vector of scaled weights, one per row.
-     * Each scaled weight = fraction_i * realLumi,
-     * where fraction_i = (nEvents_i/crossSection_i) / sum of all files' simLum
-     * and realLumi is looked up from (e, h) in en_lumi.csv.
-     *
-     * If mismatch e/h or no real lumi found for that config, returns empty.
      */
-     std::vector<double> getScaledWeights(const std::vector<CSVRow>& rows) const;
+     std::vector<double> getWeights(const std::vector<CSVRow>& rows) const;
 
 private:
 

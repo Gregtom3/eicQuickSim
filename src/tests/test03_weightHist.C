@@ -8,6 +8,7 @@
 #include "TLorentzVector.h"
 #include "TCanvas.h"
 #include "TH1D.h"
+#include "TPad.h"
 
 #include <iostream>
 #include <vector>
@@ -35,16 +36,28 @@ int main() {
     // Step 2: Load experimental luminosity info and compute scaled weights.
     // en_lumi.csv contains: electron_energy,hadron_energy,expected_lumi
     FileDataSummary summarizer("src/eicQuickSim/en_lumi.csv");
-    auto scaledWeights = summarizer.getScaledWeights(combinedRows);
-    if (scaledWeights.size() != combinedRows.size()) {
+    auto weights = summarizer.getWeights(combinedRows);
+    if (weights.size() != combinedRows.size()) {
         std::cerr << "Error: Number of scaled weights does not match number of CSV rows.\n";
         return 1;
     }
     
     // -----------------------------------------------------------
-    // Step 3: Create a global histogram for Q2.
-    // For example, we set up a histogram from 0 to 1000 GeV2 with 100 bins.
-    TH1D *hQ2 = new TH1D("hQ2", "Q^{2} Distribution;Q^{2} [GeV^{2}];Weighted Event Count", 100, 0, 1000);
+    // Step 3: Create a global histogram for Q2 using logarithmic bins
+    int nBins = 100;
+    double q2Min = 0.1;  // can't start from 0 for log scale
+    double q2Max = 1000.0;
+
+    std::vector<double> logBins(nBins + 1);
+    double logMin = std::log10(q2Min);
+    double logMax = std::log10(q2Max);
+    double binWidth = (logMax - logMin) / nBins;
+
+    for (int i = 0; i <= nBins; ++i) {
+        logBins[i] = std::pow(10, logMin + i * binWidth);
+    }
+
+    TH1D* hQ2 = new TH1D("hQ2", "Q^{2} Distribution;Q^{2} [GeV^{2}];Weighted Event Count", nBins, logBins.data());
     
     // -----------------------------------------------------------
     // Step 4: Loop over each CSVRow.
@@ -52,7 +65,7 @@ int main() {
     // Compute Q2 from the initial and scattered electron four-momenta.
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
-        double fileWeight = scaledWeights[i]; // scaled weight for this file
+        double fileWeight = weights[i]; // weight for this file
         
         // Read filepath from row
         std::string fullPath = row.filename;
@@ -114,11 +127,36 @@ int main() {
     }
     
     // -----------------------------------------------------------
-    // Step 5: Save the histogram to a ROOT file so it can be uploaded as an artifact.
-    TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
-    hQ2->Draw();
-    c1->SaveAs("hQ2.png");
-    std::cout << "Saved histogram to hQ2.png\n";
+    // Step 5: Save the histogram
+    TCanvas *c1 = new TCanvas("c1", "Q^{2} Distribution", 800, 600);
+    c1->SetLogx();
+    c1->SetLogy();
+    c1->SetMargin(0.12, 0.05, 0.12, 0.08); // Left, right, bottom, top
     
+    hQ2->SetTitle("Q^{2} Distribution");
+    hQ2->GetXaxis()->SetTitle("Q^{2} [GeV^{2}]");
+    hQ2->GetYaxis()->SetTitle("Weighted Event Count");
+    
+    hQ2->GetXaxis()->CenterTitle();
+    hQ2->GetYaxis()->CenterTitle();
+    
+    hQ2->GetXaxis()->SetTitleSize(0.045);
+    hQ2->GetYaxis()->SetTitleSize(0.045);
+    hQ2->GetXaxis()->SetLabelSize(0.04);
+    hQ2->GetYaxis()->SetLabelSize(0.04);
+    
+    hQ2->GetXaxis()->SetTitleOffset(1.2);
+    hQ2->GetYaxis()->SetTitleOffset(1.3);
+    
+    hQ2->SetLineWidth(2);
+    hQ2->SetLineColor(kBlue + 1);
+    hQ2->SetFillColorAlpha(kBlue - 9, 0.35);
+    hQ2->SetStats(0); // Hide stats box
+    
+    hQ2->Draw("HIST"); // clean outline
+    c1->RedrawAxis();
+    c1->SaveAs("hQ2.png");
+    
+    std::cout << "Saved histogram to hQ2.png\n";
     return 0;
 }
