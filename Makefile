@@ -1,4 +1,4 @@
-.PHONY: install all build run clean tests test00 test01
+.PHONY: install all build run clean tests test00 test01 test02
 
 # Directory for the CMake build
 BUILD_DIR = build

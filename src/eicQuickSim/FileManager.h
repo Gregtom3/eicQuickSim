@@ -19,7 +19,7 @@ struct CSVRow {
     int         q2Max;
     int         eEnergy;
     int         hEnergy;
-    long long   nEvents;
+    int         nEvents;
     double      crossSectionPb;
 };
 
@@ -46,9 +46,6 @@ struct EnergyQ2Key {
  */
 struct EnergyQ2KeyHash {
     std::size_t operator()(const EnergyQ2Key &k) const {
-        // Simple approach: combine the four ints in a basic way
-        // More robust mixing is possible, but let's keep it readable
-        // We'll shift + XOR
         auto h1 = std::hash<int>()(k.eEnergy);
         auto h2 = std::hash<int>()(k.hEnergy);
         auto h3 = std::hash<int>()(k.q2Min);
@@ -91,6 +88,12 @@ public:
      */
      std::vector<CSVRow> getCSVData(int eEnergy, int hEnergy, int q2Min, int q2Max,
         int nRowsRequested) const;
+
+    /**
+     * Combine any number of CSVData vectors into one.
+    */
+    std::vector<CSVRow> combineCSV(const std::vector<std::vector<CSVRow>> &dataSets) const;
+
 private:
     /**
      * Internal map: (e, h, q2Min, q2Max) -> all CSVRows for that group

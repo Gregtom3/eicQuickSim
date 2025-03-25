@@ -164,3 +164,34 @@ std::vector<CSVRow> FileManager::getCSVData(int eEnergy, int hEnergy,
     // Copy the first nRowsRequested rows
     return std::vector<CSVRow>(rows.begin(), rows.begin() + nRowsRequested);
 }
+
+/**
+ * Combine an arbitrary number of CSVRow vectors into one big vector.
+ *
+ * Example usage:
+ *
+ * std::vector<CSVRow> v1 = ...;
+ * std::vector<CSVRow> v2 = ...;
+ * std::vector<CSVRow> v3 = ...;
+ *
+ * std::vector<std::vector<CSVRow>> multiple = { v1, v2, v3 };
+ * auto combined = FileManager::combineCSV(multiple);
+ */
+ std::vector<CSVRow> FileManager::combineCSV(const std::vector<std::vector<CSVRow>> &dataSets)
+ {
+     std::vector<CSVRow> result;
+     // Reserve space if you want some optimization
+     // Calculate total size
+     size_t totalSize = 0;
+     for (auto &ds : dataSets) {
+         totalSize += ds.size();
+     }
+     result.reserve(totalSize);
+ 
+     // Append each vector in turn
+     for (auto &ds : dataSets) {
+         result.insert(result.end(), ds.begin(), ds.end());
+     }
+ 
+     return result;
+ }
