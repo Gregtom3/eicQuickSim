@@ -177,7 +177,7 @@ std::vector<CSVRow> FileManager::getCSVData(int eEnergy, int hEnergy,
  * std::vector<std::vector<CSVRow>> multiple = { v1, v2, v3 };
  * auto combined = FileManager::combineCSV(multiple);
  */
- std::vector<CSVRow> FileManager::combineCSV(const std::vector<std::vector<CSVRow>> &dataSets)
+ std::vector<CSVRow> FileManager::combineCSV(const std::vector<std::vector<CSVRow>> &dataSets) const
  {
      std::vector<CSVRow> result;
      // Reserve space if you want some optimization
