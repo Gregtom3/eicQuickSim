@@ -16,10 +16,7 @@
 using namespace HepMC3;
 
 int main() {
-    // -----------------------------------------------------------
     // Step 1: Load CSV data for the 5x41 configuration over three Q2 ranges.
-    // We assume the CSV (en_files.csv) has data for multiple Q2 ranges.
-    // For 5x41: electron energy=5 and hadron energy=41.
     FileManager fm("src/eicQuickSim/en_files.csv");
     
     std::cout << "Loading CSV data for Q2 ranges: 1-10, 10-100, and 100-1000 for 5x41.\n";
@@ -33,9 +30,7 @@ int main() {
     std::vector<CSVRow> combinedRows = FileManager::combineCSV(groups);
     std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
-    // -----------------------------------------------------------
     // Step 2: Load experimental luminosity info and compute scaled weights.
-    // en_lumi.csv contains: electron_energy,hadron_energy,expected_lumi
     FileDataSummary summarizer("src/eicQuickSim/en_lumi.csv");
     auto weights = summarizer.getWeights(combinedRows);
     if (weights.size() != combinedRows.size()) {
@@ -43,36 +38,43 @@ int main() {
         return 1;
     }
     
-    // -----------------------------------------------------------
-    // Step 3: Create a global histogram for Q2 using logarithmic bins
+    // Step 3: Create global histograms.
+    // Q2 histogram: logarithmic bins (Q2 range from 0.1 to 1000 GeV^2).
     int nBins = 100;
-    double q2Min = 0.1;  // can't start from 0 for log scale
+    double q2Min = 0.1;
     double q2Max = 1000.0;
-
     std::vector<double> logBins(nBins + 1);
     double logMin = std::log10(q2Min);
     double logMax = std::log10(q2Max);
     double binWidth = (logMax - logMin) / nBins;
-
     for (int i = 0; i <= nBins; ++i) {
         logBins[i] = std::pow(10, logMin + i * binWidth);
     }
-
     TH1D* hQ2 = new TH1D("hQ2", "Q^{2} Distribution;Q^{2} [GeV^{2}];Weighted Event Count", nBins, logBins.data());
     
-    // -----------------------------------------------------------
-    // Step 4: Loop over each CSVRow.
-    // For each file, open it and process its events
-    // Compute Q2 from the initial and scattered electron four-momenta.
+    // Bjorken x histogram: log bins from 1e-5 to 1
+    double xMin = 1e-5;
+    double xMax = 1;
+    std::vector<double> logXBins(nBins + 1);
+    double logXMin = std::log10(xMin);
+    double logXMax = std::log10(xMax);
+    double binXWidth = (logXMax - logXMin) / nBins;
+    for (int i = 0; i <= nBins; ++i) {
+        logXBins[i] = std::pow(10, logXMin + i * binXWidth);
+    }
+    TH1D* hX = new TH1D("hX", "Bjorken x Distribution;x;Weighted Event Count", nBins, logXBins.data());
+    
+    // W histogram: linear bins from 0 to 100 GeV.
+    TH1D* hW = new TH1D("hW", "W Distribution;W [GeV];Weighted Event Count", 100, 0.0, 100.0);
+    
+    // Step 4: Process each CSVRow.
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
-        double fileWeight = weights[i]; // weight for this file
+        double fileWeight = weights[i];
         
-        // Read filepath from row
         std::string fullPath = row.filename;
         std::cout << "Processing file: " << fullPath << " with weight " << fileWeight << std::endl;
         
-        // Open the file using ROOT's ReaderRootTree.
         ReaderRootTree root_input(fullPath);
         if (root_input.failed()) {
             std::cerr << "Failed to open file: " << fullPath << std::endl;
@@ -86,46 +88,86 @@ int main() {
             if (root_input.failed()) break;
             eventsParsed++;
         
-            // Use the kinematics module to compute DIS variables.
+            // Compute DIS kinematics using our Kinematics module.
             eicQuickSim::disKinematics kin = eicQuickSim::Kinematics::computeDIS(evt);
-            if (kin.Q2 > 0) { // or any condition you choose to check for a valid event
+            if (kin.Q2 > 0) { // Check that the event is valid.
                 hQ2->Fill(kin.Q2, fileWeight);
+                hX->Fill(kin.x, fileWeight);
+                hW->Fill(kin.W, fileWeight);
             }
         }
         root_input.close();
     }
     
-    // -----------------------------------------------------------
-    // Step 5: Save the histogram
+    // Step 5: Save the histograms.
+    // Q2 histogram: log-scale canvas.
     TCanvas *c1 = new TCanvas("c1", "Q^{2} Distribution", 800, 600);
     c1->SetLogx();
     c1->SetLogy();
-    c1->SetMargin(0.12, 0.05, 0.12, 0.08); // Left, right, bottom, top
-    
+    c1->SetMargin(0.12, 0.05, 0.12, 0.08);
     hQ2->SetTitle("Q^{2} Distribution (5x41)");
     hQ2->GetXaxis()->SetTitle("Q^{2} [GeV^{2}]");
     hQ2->GetYaxis()->SetTitle("Event Counts");
-    
     hQ2->GetXaxis()->CenterTitle();
     hQ2->GetYaxis()->CenterTitle();
-    
     hQ2->GetXaxis()->SetTitleSize(0.045);
     hQ2->GetYaxis()->SetTitleSize(0.045);
     hQ2->GetXaxis()->SetLabelSize(0.04);
     hQ2->GetYaxis()->SetLabelSize(0.04);
-    
     hQ2->GetXaxis()->SetTitleOffset(1.2);
     hQ2->GetYaxis()->SetTitleOffset(1.3);
-    
     hQ2->SetLineWidth(2);
     hQ2->SetLineColor(kBlue + 1);
     hQ2->SetFillColorAlpha(kBlue - 9, 0.35);
-    hQ2->SetStats(0); // Hide stats box
-    
-    hQ2->Draw("HIST"); // clean outline
+    hQ2->SetStats(0);
+    hQ2->Draw("HIST");
     c1->RedrawAxis();
     c1->SaveAs("artifacts/test03_Q2hist.png");
     
-    std::cout << "Saved histogram to artifacts/test03_Q2hist.png\n";
+    // x histogram: linear-scale canvas.
+    TCanvas *c2 = new TCanvas("c2", "Bjorken x Distribution", 800, 600);
+    c2->SetMargin(0.12, 0.05, 0.12, 0.08);
+    hX->SetTitle("Bjorken x Distribution (5x41)");
+    hX->GetXaxis()->SetTitle("x");
+    hX->GetYaxis()->SetTitle("Event Counts");
+    hX->GetXaxis()->CenterTitle();
+    hX->GetYaxis()->CenterTitle();
+    hX->GetXaxis()->SetTitleSize(0.045);
+    hX->GetYaxis()->SetTitleSize(0.045);
+    hX->GetXaxis()->SetLabelSize(0.04);
+    hX->GetYaxis()->SetLabelSize(0.04);
+    hX->GetXaxis()->SetTitleOffset(1.2);
+    hX->GetYaxis()->SetTitleOffset(1.3);
+    hX->SetLineWidth(2);
+    hX->SetLineColor(kRed + 1);
+    hX->SetFillColorAlpha(kRed - 9, 0.35);
+    hX->SetStats(0);
+    hX->Draw("HIST");
+    c2->RedrawAxis();
+    c2->SaveAs("artifacts/test03_xhist.png");
+    
+    // W histogram: linear-scale canvas.
+    TCanvas *c3 = new TCanvas("c3", "W Distribution", 800, 600);
+    c3->SetMargin(0.12, 0.05, 0.12, 0.08);
+    hW->SetTitle("W Distribution (5x41)");
+    hW->GetXaxis()->SetTitle("W [GeV]");
+    hW->GetYaxis()->SetTitle("Event Counts");
+    hW->GetXaxis()->CenterTitle();
+    hW->GetYaxis()->CenterTitle();
+    hW->GetXaxis()->SetTitleSize(0.045);
+    hW->GetYaxis()->SetTitleSize(0.045);
+    hW->GetXaxis()->SetLabelSize(0.04);
+    hW->GetYaxis()->SetLabelSize(0.04);
+    hW->GetXaxis()->SetTitleOffset(1.2);
+    hW->GetYaxis()->SetTitleOffset(1.3);
+    hW->SetLineWidth(2);
+    hW->SetLineColor(kGreen + 1);
+    hW->SetFillColorAlpha(kGreen - 9, 0.35);
+    hW->SetStats(0);
+    hW->Draw("HIST");
+    c3->RedrawAxis();
+    c3->SaveAs("artifacts/test03_Whist.png");
+    
+    std::cout << "Saved histograms to artifacts directory.\n";
     return 0;
 }
