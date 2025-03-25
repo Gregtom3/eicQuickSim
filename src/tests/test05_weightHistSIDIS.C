@@ -5,9 +5,9 @@
 // ROOT & HepMC3 includes:
 #include "HepMC3/GenEvent.h"
 #include "HepMC3/ReaderRootTree.h"
-#include "TLorentzVector.h"
 #include "TCanvas.h"
 #include "TH1D.h"
+#include "TLegend.h"
 
 #include <iostream>
 #include <vector>
@@ -16,7 +16,7 @@ using namespace HepMC3;
 int main() {
     // --- Step 1: Load CSV data for the 5x41 configuration ---
     FileManager fm("src/eicQuickSim/en_files.csv");
-    std::cout << "Loading CSV data for SIDIS analysis (5x41 configuration).\n";
+    std::cout << "Loading CSV data for SIDIS overlay analysis (5x41 configuration).\n";
     const int MAX_EVENTS = 10000;
     auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, 3, MAX_EVENTS);
     auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, 3, MAX_EVENTS);
@@ -33,10 +33,22 @@ int main() {
         return 1;
     }
     
-    // --- Step 3: Create xF histogram for pi+ (pid==211) ---
-    TH1D* h_xF = new TH1D("h_xF", "xF Distribution for #pi^{+};xF;Weighted Count", 100, -1.0, 1.0);
+    // --- Step 3: Create xF histograms for π⁺ (pid==211) and π⁻ (pid==-211) ---
+    TH1D* h_xF_piPlus = new TH1D("h_xF_piPlus", "xF Distribution; xF; Weighted Count", 100, -1.0, 1.0);
+    TH1D* h_xF_piMinus = new TH1D("h_xF_piMinus", "xF Distribution; xF; Weighted Count", 100, -1.0, 1.0);
     
-    // --- Step 4: Process each CSVRow and fill SIDIS xF histogram ---
+    // Style the histograms
+    h_xF_piPlus->SetLineWidth(2);
+    h_xF_piPlus->SetLineColor(kMagenta);
+    h_xF_piPlus->SetFillColorAlpha(kMagenta-9, 0.35);
+    h_xF_piPlus->SetStats(0);
+    
+    h_xF_piMinus->SetLineWidth(2);
+    h_xF_piMinus->SetLineColor(kCyan);
+    h_xF_piMinus->SetFillColorAlpha(kCyan-9, 0.35);
+    h_xF_piMinus->SetStats(0);
+    
+    // --- Step 4: Process each CSVRow and fill the xF histograms ---
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
         double fileWeight = weights[i];
@@ -56,33 +68,47 @@ int main() {
             if (root_input.failed()) break;
             eventsParsed++;
             
-            // Create a Kinematics object and compute DIS kinematics.
+            // Create one Kinematics object and compute DIS kinematics.
             eicQuickSim::Kinematics kin;
             kin.computeDIS(evt);
             
-            // Now compute SIDIS kinematics for pi+ (pid==211).
+            // Compute SIDIS for π⁺ (pid==211) and store the results.
             kin.computeSIDIS(evt, 211);
+            eicQuickSim::sidisKinematics sidis_piPlus = kin.getSIDISKinematics();
             
-            // Retrieve the SIDIS kinematics and fill the xF histogram.
-            eicQuickSim::sidisKinematics sidis = kin.getSIDISKinematics();
-            for (double xf_val : sidis.xF) {
-                h_xF->Fill(xf_val, fileWeight);
+            // Compute SIDIS for π⁻ (pid==-211) and store the results.
+            kin.computeSIDIS(evt, -211);
+            eicQuickSim::sidisKinematics sidis_piMinus = kin.getSIDISKinematics();
+            
+            // Fill the histograms with xF values.
+            for (double xf_val : sidis_piPlus.xF) {
+                h_xF_piPlus->Fill(xf_val, fileWeight);
+            }
+            for (double xf_val : sidis_piMinus.xF) {
+                h_xF_piMinus->Fill(xf_val, fileWeight);
             }
         }
         root_input.close();
     }
     
-    // --- Step 5: Save the xF histogram ---
-    TCanvas* c1 = new TCanvas("c1", "xF Distribution for #pi^{+}", 800, 600);
+    // --- Step 5: Draw both histograms on the same canvas with a legend ---
+    TCanvas* c1 = new TCanvas("c1", "xF Distribution for #pi^{+} and #pi^{-}", 800, 600);
     c1->SetMargin(0.12, 0.05, 0.12, 0.08);
-    h_xF->SetLineWidth(2);
-    h_xF->SetLineColor(kMagenta);
-    h_xF->SetFillColorAlpha(kMagenta-9, 0.35);
-    h_xF->SetStats(0);
-    h_xF->Draw("HIST");
-    c1->RedrawAxis();
-    c1->SaveAs("artifacts/test05_xF_piPlus.png");
     
-    std::cout << "Saved xF histogram for #pi^{+} to artifacts/test05_xF_piPlus.png\n";
+    // Draw the π⁺ histogram first.
+    h_xF_piPlus->Draw("HIST");
+    // Overlay the π⁻ histogram.
+    h_xF_piMinus->Draw("HIST SAME");
+    
+    // Create a legend.
+    TLegend* legend = new TLegend(0.65, 0.70, 0.88, 0.88);
+    legend->AddEntry(h_xF_piPlus, "#pi^{+}", "l");
+    legend->AddEntry(h_xF_piMinus, "#pi^{-}", "l");
+    legend->Draw();
+    
+    c1->RedrawAxis();
+    c1->SaveAs("artifacts/test05_xF_piOverlay.png");
+    
+    std::cout << "Saved overlay xF histogram for #pi^{+} and #pi^{-} to artifacts/test05_xF_piOverlay.png\n";
     return 0;
 }

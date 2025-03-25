@@ -60,17 +60,17 @@ void Kinematics::computeDIS(const HepMC3::GenEvent& evt) {
     disKin_.W = (W2 > 0.0) ? std::sqrt(W2) : 0.0;
 }
 
-double Kinematics::xF(const TLorentzVector& q, const TLorentzVector& p,
-                      const TLorentzVector& init_target, double W) {
-    TLorentzVector com = q + init_target;
+double Kinematics::xF(const TLorentzVector& q, const TLorentzVector& h,
+                      const TLorentzVector& pIn, double W) {
+    TLorentzVector com = q + pIn;
     TVector3 comBOOST = com.BoostVector();
     TLorentzVector qq = q;
-    TLorentzVector pp = p;
+    TLorentzVector hh = h;
     qq.Boost(-comBOOST);
-    pp.Boost(-comBOOST);
+    hh.Boost(-comBOOST);
     double mag_qq = qq.Vect().Mag();
     if (mag_qq == 0 || W == 0) return 0;
-    return 2 * (qq.Vect().Dot(pp.Vect())) / (mag_qq * W);
+    return 2 * (qq.Vect().Dot(hh.Vect())) / (mag_qq * W);
 }
 
 void Kinematics::computeSIDIS(const HepMC3::GenEvent& evt, int pid) {
