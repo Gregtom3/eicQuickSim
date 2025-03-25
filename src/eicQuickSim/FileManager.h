@@ -92,7 +92,7 @@ public:
     /**
      * Combine any number of CSVData vectors into one.
     */
-    static std::vector<CSVRow> combineCSV(const std::vector<std::vector<CSVRow>> &dataSets) const;
+    static std::vector<CSVRow> combineCSV(const std::vector<std::vector<CSVRow>> &dataSets);
 
 private:
     /**
