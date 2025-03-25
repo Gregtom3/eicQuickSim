@@ -109,7 +109,7 @@ bool FileDataSummary::checkUniformEnergy(const std::vector<CSVRow>& rows) const
  }
 
  /**
- * If the rows have mixed energies, return 0.0. Otherwise, sum(nEvents_i * crossSection_i).
+ * If the rows have mixed energies, return 0.0. Otherwise, sum(nEvents_i/crossSection_i).
  */
 double FileDataSummary::getTotalLuminosity(const std::vector<CSVRow>& rows) const
 {
@@ -122,8 +122,8 @@ double FileDataSummary::getTotalLuminosity(const std::vector<CSVRow>& rows) cons
 
     double totalLumi = 0.0;
     for (auto &r : rows) {
-        // each file i => nEvents_i * crossSection_i
-        totalLumi += (static_cast<double>(r.nEvents) * r.crossSectionPb);
+        // each file i => nEvents_i/crossSection_i
+        totalLumi += (static_cast<double>(r.nEvents)/r.crossSectionPb);
     }
     return totalLumi;
 }

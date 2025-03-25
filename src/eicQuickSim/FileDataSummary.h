@@ -25,11 +25,11 @@ public:
 
     /**
      * Compute the total "simulated luminosity" by summing:
-     *   nEvents_i * crossSection_i
+     *   nEvents_i/crossSection_i
      * for each file i in rows. Requires a uniform (eEnergy, hEnergy).
      */
      double getTotalLuminosity(const std::vector<CSVRow>& rows) const;
-     
+
 private:
 
     bool checkUniformEnergy(const std::vector<CSVRow>& rows) const;
