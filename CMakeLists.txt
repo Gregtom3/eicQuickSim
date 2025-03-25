@@ -51,6 +51,19 @@ target_link_libraries(test02_dataSummary PRIVATE ${ROOT_LIBRARIES})
 add_test(NAME dataSummaryTest COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test02_dataSummary)
 
 # ----------------------------------------------------------------------------
+# test02_weightHist
+# ----------------------------------------------------------------------------
+add_executable(test03_weightHist 
+    src/tests/test03_weightHist.C 
+    src/eicQuickSim/FileManager.C 
+    src/eicQuickSim/FileDataSummary.C
+)
+
+target_link_libraries(test03_weightHist PRIVATE ${ROOT_LIBRARIES})
+
+add_test(NAME weightHistTest COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test03_weightHist)
+
+# ----------------------------------------------------------------------------
 # Enable CTest and define each test
 # ----------------------------------------------------------------------------
 enable_testing()
@@ -66,3 +79,4 @@ add_test(
     NAME grabFilesTest
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test01_grabFiles
 )
+

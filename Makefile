@@ -15,17 +15,14 @@ build:
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake .. && make
 
-# Run the old test00_readData
 test00: build
 	./$(BUILD_DIR)/test00_readData
-
-# Run the new test01_grabFiles
 test01: build
 	./$(BUILD_DIR)/test01_grabFiles
-
-# Run the new test01_grabFiles
 test02: build
 	./$(BUILD_DIR)/test02_dataSummary
+test03: build
+    ./$(BUILD_DIR)/test03_weightHist
 
 # Run all CTest-based tests (both test00 and test01, plus any others)
 tests: build
