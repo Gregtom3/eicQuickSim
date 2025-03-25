@@ -53,8 +53,8 @@ int main() {
         CSVRow row = combinedRows[i];
         double fileWeight = scaledWeights[i]; // scaled weight for this file
         
-        // Build the full file path by prepending the xrootd prefix.
-        std::string fullPath = "root://dtn-eic.jlab.org/" + row.filename;
+        // Read filepath from row
+        std::string fullPath = row.filename;
         std::cout << "Processing file: " << fullPath << " with weight " << fileWeight << std::endl;
         
         // Open the file using ROOT's ReaderRootTree.
@@ -89,9 +89,18 @@ int main() {
             
             // Only proceed if both electrons are found.
             if (initElectron && scatElectron) {
-                // Compute Q2 = -(p_in - p_out)².
-                TLorentzVector p_in = initElectron->momentum();
-                TLorentzVector p_out = scatElectron->momentum();
+                // Compute Q2 = -(p_in - p_out)2.
+                TLorentzVector p_in, p_out;
+                p_in.SetPxPyPzE(initElectron->momentum().px(),
+                                initElectron->momentum().py(),
+                                initElectron->momentum().pz(),
+                                initElectron->momentum().e()
+                                );
+                p_out.SetPxPyPzE(scatElectron->momentum().px(),
+                                scatElectron->momentum().py(),
+                                scatElectron->momentum().pz(),
+                                scatElectron->momentum().e()
+                                );
                 TLorentzVector q = p_in - p_out;
                 double Q2 = -q.M2();
                 

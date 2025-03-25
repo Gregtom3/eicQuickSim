@@ -59,7 +59,13 @@ add_executable(test03_weightHist
     src/eicQuickSim/FileDataSummary.C
 )
 
-target_link_libraries(test03_weightHist PRIVATE ${ROOT_LIBRARIES})
+target_link_libraries(
+    test03_weightHist 
+    PRIVATE 
+        ${ROOT_LIBRARIES}
+        "${HEPMC3_LIB_DIR}/libHepMC3.so"
+        "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so"
+)
 
 add_test(NAME weightHistTest COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test03_weightHist)
 
