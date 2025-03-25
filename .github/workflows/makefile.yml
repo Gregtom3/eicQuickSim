@@ -57,9 +57,9 @@ jobs:
         make test00 test01 test02 test03
         EOF
 
-    - name: Upload histogram artifact
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Q2-Histogram
-        path: hQ2.png
+        name: artifacts
+        path: artifacts/
 

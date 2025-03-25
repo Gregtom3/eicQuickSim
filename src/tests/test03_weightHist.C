@@ -133,9 +133,9 @@ int main() {
     c1->SetLogy();
     c1->SetMargin(0.12, 0.05, 0.12, 0.08); // Left, right, bottom, top
     
-    hQ2->SetTitle("Q^{2} Distribution");
+    hQ2->SetTitle("Q^{2} Distribution (5x41)");
     hQ2->GetXaxis()->SetTitle("Q^{2} [GeV^{2}]");
-    hQ2->GetYaxis()->SetTitle("Weighted Event Count");
+    hQ2->GetYaxis()->SetTitle("Event Counts");
     
     hQ2->GetXaxis()->CenterTitle();
     hQ2->GetYaxis()->CenterTitle();
@@ -155,8 +155,8 @@ int main() {
     
     hQ2->Draw("HIST"); // clean outline
     c1->RedrawAxis();
-    c1->SaveAs("hQ2.png");
+    c1->SaveAs("artifacts/test03_Q2hist.png");
     
-    std::cout << "Saved histogram to hQ2.png\n";
+    std::cout << "Saved histogram to artifacts/test03_Q2hist.png\n";
     return 0;
 }
