@@ -3,6 +3,55 @@
 #include <algorithm>
 #include <cmath>
 
+FileDataSummary::FileDataSummary(const std::string &expLumiCSV)
+{
+    loadExperimentalLum(expLumiCSV);
+}
+
+/**
+ * Parse the CSV lines, store into realLumMap_ keyed by (e,h).
+ */
+ void FileDataSummary::loadExperimentalLum(const std::string& csvPath)
+ {
+     std::ifstream infile(csvPath);
+     if (!infile.is_open()) {
+         std::cerr << "[FileDataSummary] Warning: could not open " << csvPath << std::endl;
+         return;
+     }
+ 
+     bool isHeader = true;
+     std::string line;
+     while (std::getline(infile, line)) {
+         if (isHeader) {
+             isHeader = false;
+             continue; // skip header
+         }
+         if (line.empty()) continue;
+ 
+         std::stringstream ss(line);
+         std::string token;
+         std::vector<std::string> fields;
+         while (std::getline(ss, token, ',')) {
+             fields.push_back(token);
+         }
+         if (fields.size() < 3) {
+             std::cerr << "[FileDataSummary] Malformed row in " << csvPath << ": " << line << std::endl;
+             continue;
+         }
+         try {
+             int e = std::stoi(fields[0]);
+             int h = std::stoi(fields[1]);
+             double lum = std::stod(fields[2]);
+             EHKey key { e, h };
+             realLumMap_[key] = lum;
+         } catch (const std::exception &ex) {
+             std::cerr << "[FileDataSummary] parse error: " << ex.what()
+                       << " on line: " << line << std::endl;
+         }
+     }
+ }
+
+
 int FileDataSummary::getTotalEvents(const std::vector<CSVRow>& rows) const
 {
     int total = 0;
@@ -128,41 +177,57 @@ double FileDataSummary::getTotalLuminosity(const std::vector<CSVRow>& rows) cons
     return totalLumi;
 }
 
-/**
- * Returns a scaling weight for each file dependent on the total (simulated) integrated luminosity
-*/
-std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows) const
-{
-    std::vector<double> result;
 
+/**
+ * getScaledWeights:
+ *   1) Ensure uniform (e,h)
+ *   2) Compute totalSimLum = sum_i(nEvents_i/crossSection_i)
+ *   3) fraction_i = simLum_i / totalSimLum
+ *   4) realLum = from realLumMap_ for (e,h)
+ *   5) scaledWeight_i = fraction_i * realLum
+ *   Returns a vector of that size. If no realLum found, prints error => returns empty.
+ */
+std::vector<double> FileDataSummary::getScaledWeights(const std::vector<CSVRow>& rows) const
+{
+    std::vector<double> weights;
     if (rows.empty()) {
-        return result; // empty input => empty output
+        return weights; // empty
     }
     if (!checkUniformEnergy(rows)) {
-        // mismatch energies => error
-        std::cerr << "[FileDataSummary] getWeights: Mixed energies => returning empty.\n";
-        return result;
+        // mismatch => return empty
+        return weights;
     }
 
-    // 1) Compute total luminosity:
-    //    sum of nEvents_i * crossSection_i
-    double totalLumi = 0.0;
+    // figure out the single (e,h) for these rows
+    int e = rows[0].eEnergy;
+    int h = rows[0].hEnergy;
+    EHKey key { e, h };
+    auto it = realLumMap_.find(key);
+    if (it == realLumMap_.end()) {
+        std::cerr << "[FileDataSummary] No realLum found for e=" << e << ", h=" << h
+                  << " in en_lumi.csv\n";
+        return weights; // empty
+    }
+    double realLum = it->second; // experimental luminosity from en_lumi.csv
+
+    // sum up total sim lum
+    double totalSimLum = 0.0;
     for (auto &r : rows) {
-        totalLumi += (static_cast<double>(r.nEvents)/r.crossSectionPb);
+        totalSimLum += (static_cast<double>(r.nEvents)/r.crossSectionPb);
+    }
+    if (totalSimLum <= 0.0) {
+        std::cerr << "[FileDataSummary] totalSimLum <= 0 => can't scale.\n";
+        return weights;
     }
 
-    if (totalLumi <= 0.0) {
-        std::cerr << "[FileDataSummary] getWeights: total luminosity <= 0 => returning empty.\n";
-        return result;
-    }
-
-    // 2) For each row, weight_i = (nEvents_i/crossSection_i) / totalLumi
-    result.reserve(rows.size());
+    // build weights
+    weights.reserve(rows.size());
     for (auto &r : rows) {
-        double thisLumi = static_cast<double>(r.nEvents)/r.crossSectionPb;
-        double w = thisLumi / totalLumi;
-        result.push_back(w);
+        double thisSimLum = static_cast<double>(r.nEvents)/r.crossSectionPb;
+        double fraction   = thisSimLum / totalSimLum;
+        double scaledW    = fraction * realLum; 
+        weights.push_back(scaledW);
     }
 
-    return result;
+    return weights;
 }

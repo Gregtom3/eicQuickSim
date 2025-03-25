@@ -2,15 +2,16 @@
 #define FILEDATASUMMARY_H
 
 #include <vector>
+#include <unordered_map>
 #include "FileManager.h" 
 
 /**
  * The FileDataSummary class can compute various aggregate info about a
- * set of files. For now, it just computes the total number of events.
+ * set of files.
  */
 class FileDataSummary {
 public:
-    FileDataSummary() = default;
+    explicit FileDataSummary(const std::string& expLumiCSV);
     ~FileDataSummary() = default;
 
     /**
@@ -31,11 +32,15 @@ public:
      double getTotalLuminosity(const std::vector<CSVRow>& rows) const;
 
     /**
-     * Return a list of weights, one per row
+     * Return a vector of scaled weights, one per row.
+     * Each scaled weight = fraction_i * realLumi,
+     * where fraction_i = (nEvents_i/crossSection_i) / sum of all files' simLum
+     * and realLumi is looked up from (e, h) in en_lumi.csv.
+     *
+     * If mismatch e/h or no real lumi found for that config, returns empty.
      */
+     std::vector<double> getScaledWeights(const std::vector<CSVRow>& rows) const;
 
-     std::vector<double> getWeights(const std::vector<CSVRow>& rows) const;
-     
 private:
 
     bool checkUniformEnergy(const std::vector<CSVRow>& rows) const;
@@ -44,6 +49,24 @@ private:
         return (m1 >= m2 && M1 <= M2);
     }
 
+    struct EHKey {
+        int e;
+        int h;
+        bool operator==(const EHKey &o) const { return (e == o.e && h == o.h); }
+    };
+    struct EHKeyHash {
+        std::size_t operator()(const EHKey &k) const {
+            // Combine e,h
+            auto he = std::hash<int>()(k.e);
+            auto hh = std::hash<int>()(k.h);
+            // simple combine
+            return he ^ (hh + 0x9e3779b97f4a7c15ULL + (he << 6) + (he >> 2));
+        }
+    };
+
+    std::unordered_map<EHKey, double, EHKeyHash> realLumMap_;
+
+    void loadExperimentalLum(const std::string& csvPath);
 };
 
 #endif // FILEDATASUMMARY_H

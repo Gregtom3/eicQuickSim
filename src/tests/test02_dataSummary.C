@@ -11,7 +11,7 @@ int main() {
     auto rows = fm.getCSVData(10, 100, 10, 100, -1);
 
     // Step 3: Summarize with FileDataSummary
-    FileDataSummary summarizer;
+    FileDataSummary summarizer("src/eicQuickSim/en_lumi.csv");
     int totalEvents = summarizer.getTotalEvents(rows);
     double totalLumi = summarizer.getTotalLuminosity(rows);
 
