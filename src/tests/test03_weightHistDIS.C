@@ -88,12 +88,11 @@ int main() {
             if (root_input.failed()) break;
             eventsParsed++;
         
-            // Compute DIS kinematics using our Kinematics module.
-            eicQuickSim::disKinematics kin = eicQuickSim::Kinematics::computeDIS(evt);
-            if (kin.Q2 > 0) { // Check that the event is valid.
-                hQ2->Fill(kin.Q2, fileWeight);
-                hX->Fill(kin.x, fileWeight);
-                hW->Fill(kin.W, fileWeight);
+            eicQuickSim::Kinematics kin;
+            kin.computeDIS(evt);
+            eicQuickSim::disKinematics dis = kin.getDISKinematics();
+            if (dis.Q2 > 0) {
+                hQ2->Fill(dis.Q2, fileWeight);
             }
         }
         root_input.close();

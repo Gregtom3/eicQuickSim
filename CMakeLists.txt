@@ -26,11 +26,13 @@ endfunction()
 add_eic_test(test00_readData      "src/tests/test00_readData.C"         TRUE)
 add_eic_test(test01_grabFiles     "src/tests/test01_grabFiles.C;src/eicQuickSim/FileManager.C" FALSE)
 add_eic_test(test02_dataSummary   "src/tests/test02_dataSummary.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C" FALSE)
-add_eic_test(test03_weightHist    
-    "src/tests/test03_weightHist.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
+add_eic_test(test03_weightHistDIS    
+    "src/tests/test03_weightHistDIS.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
     TRUE)
 add_eic_test(test04_printEvent    
     "src/tests/test04_printEvent.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
     TRUE)
-
+add_eic_test(test05_weightHistSIDIS    
+    "src/tests/test05_weightHistSIDIS.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
+    TRUE)
 enable_testing()

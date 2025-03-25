@@ -2,8 +2,16 @@
 #include <cmath>
 #include <iostream>
 #include "HepMC3/GenParticle.h"
+#include "TLorentzVector.h"
+#include "TVector3.h"
 
 namespace eicQuickSim {
+
+Kinematics::Kinematics() {
+    disKin_.Q2 = 0;
+    disKin_.x  = 0;
+    disKin_.W  = 0;
+}
 
 TLorentzVector Kinematics::buildFourVector(const std::shared_ptr<const HepMC3::GenParticle>& particle) {
     TLorentzVector vec;
@@ -14,7 +22,7 @@ TLorentzVector Kinematics::buildFourVector(const std::shared_ptr<const HepMC3::G
     return vec;
 }
 
-std::vector<std::shared_ptr<const HepMC3::GenParticle>> 
+std::vector<std::shared_ptr<const HepMC3::GenParticle>>
 Kinematics::searchParticle(const HepMC3::GenEvent& evt, int status, int pid) {
     std::vector<std::shared_ptr<const HepMC3::GenParticle>> found;
     for (const auto& particle : evt.particles()) {
@@ -25,42 +33,71 @@ Kinematics::searchParticle(const HepMC3::GenEvent& evt, int status, int pid) {
     return found;
 }
 
-disKinematics Kinematics::computeDIS(const HepMC3::GenEvent& evt) {
-    disKinematics result {0.0, 0.0, 0.0};
-
-    // Find the initial electron (eIn), scattered electron (eOut) and initial hadron (pIn).
+void Kinematics::computeDIS(const HepMC3::GenEvent& evt) {
+    // Find initial electron (eIn): status==4, pid==11.
     auto initElectrons = searchParticle(evt, 4, 11);
+    // Find scattered electron (eOut): status==21, pid==11.
     auto scatElectrons = searchParticle(evt, 21, 11);
-    auto initHadrons   = searchParticle(evt, 4, 2112);
+    // Find target hadron (pIn): status==4, pid==2112.
+    auto initHadrons = searchParticle(evt, 4, 2112);
 
     if (initElectrons.empty() || scatElectrons.empty() || initHadrons.empty()) {
-        std::cerr << "Kinematics::computeDIS: Required particle(s) not found." << std::endl;
-        return result;
+        std::cerr << "Kinematics::computeDIS: Required DIS particle(s) not found." << std::endl;
+        return;
     }
 
-    // Use the first particle found for each type.
-    auto initElectron = initElectrons[0];
-    auto scatElectron = scatElectrons[0];
-    auto initHadron   = initHadrons[0];
+    // Use the first matching particle in each case.
+    disKin_.eIn  = buildFourVector(initElectrons[0]);
+    disKin_.eOut = buildFourVector(scatElectrons[0]);
+    disKin_.pIn  = buildFourVector(initHadrons[0]);
+    disKin_.q    = disKin_.eIn - disKin_.eOut;
+    disKin_.Q2   = -disKin_.q.M2();
 
-    // Build four-vectors.
-    TLorentzVector eIn  = buildFourVector(initElectron);
-    TLorentzVector eOut = buildFourVector(scatElectron);
-    TLorentzVector pIn  = buildFourVector(initHadron);
+    double denominator = 2 * (disKin_.pIn.E() * disKin_.q.E() - disKin_.pIn.Pz() * disKin_.q.Pz());
+    disKin_.x = (denominator != 0.0) ? disKin_.Q2 / denominator : 0.0;
 
-    // Calculate the momentum transfer.
-    TLorentzVector q = eIn - eOut;
-    result.Q2 = -q.M2();
+    double W2 = (disKin_.pIn + disKin_.q).M2();
+    disKin_.W = (W2 > 0.0) ? std::sqrt(W2) : 0.0;
+}
 
-    // Compute Bjorken x using the initial hadron four-vector.
-    double denominator = 2 * (pIn.E() * q.E() - pIn.Pz() * q.Pz());
-    result.x = (denominator != 0.0) ? result.Q2 / denominator : 0.0;
+double Kinematics::xF(const TLorentzVector& q, const TLorentzVector& p,
+                      const TLorentzVector& init_target, double W) {
+    TLorentzVector com = q + init_target;
+    TVector3 comBOOST = com.BoostVector();
+    TLorentzVector qq = q;
+    TLorentzVector pp = p;
+    qq.Boost(-comBOOST);
+    pp.Boost(-comBOOST);
+    double mag_qq = qq.Vect().Mag();
+    if (mag_qq == 0 || W == 0) return 0;
+    return 2 * (qq.Vect().Dot(pp.Vect())) / (mag_qq * W);
+}
 
-    // Calculate the invariant mass W of the hadronic system.
-    double W2 = (pIn + q).M2();
-    result.W = (W2 > 0.0) ? std::sqrt(W2) : 0.0;
+void Kinematics::computeSIDIS(const HepMC3::GenEvent& evt, int pid) {
+    // Make sure DIS has been computed.
+    if (disKin_.Q2 <= 0) {
+        std::cerr << "Kinematics::computeSIDIS: DIS kinematics not computed properly." << std::endl;
+        return;
+    }
 
-    return result;
+    // Clear previous SIDIS values.
+    sidisKin_.xF.clear();
+
+    // Look for final state hadrons: status==1 and the given pid.
+    auto finalParticles = searchParticle(evt, 1, pid);
+    for (auto& particle : finalParticles) {
+        TLorentzVector hadron = buildFourVector(particle);
+        double xf_val = xF(disKin_.q, hadron, disKin_.pIn, disKin_.W);
+        sidisKin_.xF.push_back(xf_val);
+    }
+}
+
+disKinematics Kinematics::getDISKinematics() const {
+    return disKin_;
+}
+
+sidisKinematics Kinematics::getSIDISKinematics() const {
+    return sidisKin_;
 }
 
 } // namespace eicQuickSim
