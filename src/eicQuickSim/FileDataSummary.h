@@ -2,7 +2,7 @@
 #define FILEDATASUMMARY_H
 
 #include <vector>
-#include "FileManager.h"  // for CSVRow
+#include "FileManager.h" 
 
 /**
  * The FileDataSummary class can compute various aggregate info about a
@@ -19,16 +19,21 @@ public:
     int getTotalEvents(const std::vector<CSVRow>& rows) const;
 
     /**
-     * Computes the "total cross section" from a list of CSVRow entries,
-     * respecting the rule that if a larger Q² interval is present, it
-     * includes the cross sections of fully nested intervals.
+     * Integrated cross section, skipping contained Q² intervals.
      */
      double getTotalCrossSection(const std::vector<CSVRow>& rows) const;
 
-private:
     /**
-    * Helper to check if interval (m1..M1) is contained in (m2..M2).
-    */
+     * Compute the total "simulated luminosity" by summing:
+     *   nEvents_i * crossSection_i
+     * for each file i in rows. Requires a uniform (eEnergy, hEnergy).
+     */
+     double getTotalLuminosity(const std::vector<CSVRow>& rows) const;
+     
+private:
+
+    bool checkUniformEnergy(const std::vector<CSVRow>& rows) const;
+
     bool isContained(int m1, int M1, int m2, int M2) const {
         return (m1 >= m2 && M1 <= M2);
     }

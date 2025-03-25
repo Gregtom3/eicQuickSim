@@ -12,6 +12,25 @@ int FileDataSummary::getTotalEvents(const std::vector<CSVRow>& rows) const
     return total;
 }
 
+
+bool FileDataSummary::checkUniformEnergy(const std::vector<CSVRow>& rows) const
+{
+    if (rows.empty()) {
+        return true; // no conflict if empty
+    }
+    int eEnergy = rows[0].eEnergy;
+    int hEnergy = rows[0].hEnergy;
+    for (const auto &r : rows) {
+        if (r.eEnergy != eEnergy || r.hEnergy != hEnergy) {
+            std::cerr << "[FileDataSummary] Error: Mixed energies in row list. "
+                      << "Found (" << r.eEnergy << "x" << r.hEnergy << ") vs ("
+                      << eEnergy << "x" << hEnergy << ")\n";
+            return false;
+        }
+    }
+    return true;
+}
+
 /**
  * If the rows have mixed electron/hadron energies, we print an error and return 0.0.
  * Otherwise, we treat each Q² range as an interval. If we have a bigger interval
@@ -30,17 +49,10 @@ int FileDataSummary::getTotalEvents(const std::vector<CSVRow>& rows) const
          return 0.0;
      }
  
-     // 1) Check that all rows share the same eEnergy/hEnergy
-     int eEnergy = rows[0].eEnergy;
-     int hEnergy = rows[0].hEnergy;
-     for (const auto &r : rows) {
-         if (r.eEnergy != eEnergy || r.hEnergy != hEnergy) {
-             std::cerr << "[FileDataSummary] Error: Mixed energies in row list. "
-                       << "Found (" << r.eEnergy << "x" << r.hEnergy << ") vs ("
-                       << eEnergy << "x" << hEnergy << ")\n";
-             return 0.0;
-         }
-     }
+    // 1) energy check
+    if (!checkUniformEnergy(rows)) {
+        return 0.0;
+    }
  
      // 2) Build local vector of intervals with: (q2min, q2max, crossPb).
      struct Interval {
@@ -95,3 +107,23 @@ int FileDataSummary::getTotalEvents(const std::vector<CSVRow>& rows) const
  
      return totalCross;
  }
+
+ /**
+ * If the rows have mixed energies, return 0.0. Otherwise, sum(nEvents_i * crossSection_i).
+ */
+double FileDataSummary::getTotalLuminosity(const std::vector<CSVRow>& rows) const
+{
+    if (rows.empty()) {
+        return 0.0;
+    }
+    if (!checkUniformEnergy(rows)) {
+        return 0.0;
+    }
+
+    double totalLumi = 0.0;
+    for (auto &r : rows) {
+        // each file i => nEvents_i * crossSection_i
+        totalLumi += (static_cast<double>(r.nEvents) * r.crossSectionPb);
+    }
+    return totalLumi;
+}
