@@ -1,40 +1,24 @@
 .PHONY: install all build run clean tests test00 test01 test02 test03
 
-# Directory for the CMake build
 BUILD_DIR = build
+TESTS = test00 test01 test02 test03
 
-# NOTE: This Makefile expects to be run inside the eic-shell environment,
-# which provides ROOT, HepMC3, etc.
-
-# Install Python requirements
+# Setup
 install:
 	pip install -r requirements.txt
 
-# Configure and build with CMake
 build:
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake .. && make
 
-test00: build
-	./$(BUILD_DIR)/test00_readData
+# Pattern rule for tests
+$(TESTS): build
+	./$(BUILD_DIR)/$@
 
-test01: build
-	./$(BUILD_DIR)/test01_grabFiles
-
-test02: build
-	./$(BUILD_DIR)/test02_dataSummary
-
-test03: build
-	./$(BUILD_DIR)/test03_weightHist
-
-
-# Run all CTest-based tests
 tests: build
 	cd $(BUILD_DIR) && ctest --verbose
 
-# Clean the build directory
 clean:
 	rm -rf $(BUILD_DIR)
 
-# Build everything (Python + C++):
 all: install build
