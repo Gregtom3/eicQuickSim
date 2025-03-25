@@ -1,5 +1,6 @@
 #include "FileManager.h"
 #include "FileDataSummary.h"
+#include "Kinematics.h"
 
 // ROOT & HepMC3 includes:
 #include "HepMC3/GenEvent.h"
@@ -80,47 +81,15 @@ int main() {
         
         int eventsParsed = 0;
         while (!root_input.failed() && eventsParsed < MAX_EVENTS) {
-            if(eventsParsed%1000==0){std::cout<<"Event " << eventsParsed << std::endl;}
             GenEvent evt;
             root_input.read_event(evt);
             if (root_input.failed()) break;
             eventsParsed++;
-            
-            // Get the initial and scattered electron.
-            GenParticlePtr initElectron = nullptr;
-            GenParticlePtr scatElectron = nullptr;
-            const auto& particles = evt.particles();
-            for (const auto& particle : particles) {
-                int status = particle->status();
-                int pid = particle->pid();
-                // initial electron: status==4, pid==11
-                // scattered electron: status==21, pid==11
-                if (status == 4 && pid == 11) {
-                    initElectron = particle;
-                } else if (status == 21 && pid == 11) {
-                    scatElectron = particle;
-                }
-            }
-            
-            // Only proceed if both electrons are found.
-            if (initElectron && scatElectron) {
-                // Compute Q2 = -(p_in - p_out)2.
-                TLorentzVector p_in, p_out;
-                p_in.SetPxPyPzE(initElectron->momentum().px(),
-                                initElectron->momentum().py(),
-                                initElectron->momentum().pz(),
-                                initElectron->momentum().e()
-                                );
-                p_out.SetPxPyPzE(scatElectron->momentum().px(),
-                                scatElectron->momentum().py(),
-                                scatElectron->momentum().pz(),
-                                scatElectron->momentum().e()
-                                );
-                TLorentzVector q = p_in - p_out;
-                double Q2 = -q.M2();
-                
-                // Fill the histogram with the Q2 value weighted by the file's scaled weight.
-                hQ2->Fill(Q2, fileWeight);
+        
+            // Use the kinematics module to compute DIS variables.
+            eicQuickSim::disKinematics kin = eicQuickSim::Kinematics::computeDIS(evt);
+            if (kin.Q2 > 0) { // or any condition you choose to check for a valid event
+                hQ2->Fill(kin.Q2, fileWeight);
             }
         }
         root_input.close();
