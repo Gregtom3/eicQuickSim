@@ -29,5 +29,8 @@ add_eic_test(test02_dataSummary   "src/tests/test02_dataSummary.C;src/eicQuickSi
 add_eic_test(test03_weightHist    
     "src/tests/test03_weightHist.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
     TRUE)
+add_eic_test(test04_printEvent    
+    "src/tests/test04_printEvent.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
+    TRUE)
 
 enable_testing()
