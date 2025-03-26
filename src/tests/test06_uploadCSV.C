@@ -2,6 +2,7 @@
 #include "FileDataSummary.h"
 #include <iostream>
 
+
 int main() {
     // Step 1: Construct the FileManager
     FileManager fm("src/eicQuickSim/en_files.csv");
@@ -18,9 +19,35 @@ int main() {
     std::vector<double> weights = summarizer.getWeights(rows);
 
     // Write the CSV with weights to a new file.
-    if (!summarizer.exportCSVWithWeights(rows, weights, "artifacts/test06_10x100_Q2_10_100.csv")) {
+    const std::string outputPath = "artifacts/test06_10x100_Q2_10_100.csv";
+    if (!summarizer.exportCSVWithWeights(rows, weights, outputPath)) {
         std::cerr << "Failed to export CSV with weights." << std::endl;
+        return 1;
     }
 
+    // Step 4: Re-load the CSV with weights and print out the weights
+    std::ifstream infile(outputPath);
+    if (!infile.is_open()) {
+        std::cerr << "Error opening file: " << outputPath << std::endl;
+        return 1;
+    }
+    
+    std::string line;
+    bool isHeader = true;
+    std::cout << "\nLoaded Weights from CSV:" << std::endl;
+    while (std::getline(infile, line)) {
+        // Skip header line.
+        if (isHeader) {
+            isHeader = false;
+            continue;
+        }
+        
+        // Use the FileManager's parseLine to parse the CSV line.
+        CSVRow parsedRow = fm.parseLine(line);
+        std::cout << "File: " << parsedRow.filename
+                  << ", Weight: " << parsedRow.weight << std::endl;
+    }
+    
+    infile.close();
     return 0;
 }

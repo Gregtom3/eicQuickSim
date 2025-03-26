@@ -73,6 +73,7 @@ double Kinematics::xF(const TLorentzVector& q, const TLorentzVector& h,
     return 2 * (qq.Vect().Dot(hh.Vect())) / (mag_qq * W);
 }
 
+
 void Kinematics::computeSIDIS(const HepMC3::GenEvent& evt, int pid) {
     // Make sure DIS has been computed.
     if (disKin_.Q2 <= 0) {
