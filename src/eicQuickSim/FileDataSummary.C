@@ -250,25 +250,10 @@ std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows)
         }
         
         double thisGroupEvents = it->second;
-        // Expected events from this file:
-        double thisExpectedEvents = thisSimXsec * realLum * (thisSimEvents / thisGroupEvents) / q2GroupEventCounts.size();
-        // Scale factor (weight):
-        double scaledW = thisExpectedEvents / thisSimEvents;
+        double thisGroupLumi = thisGroupEvents/thisSimXsec;
+        double scaledW = realLum / thisGroupLumi;
         weights.push_back(scaledW);
     }
-    
-    // Step 3: Optionally, verify the reconstructed total luminosity.
-    double reconstructedLum = 0.0;
-    for (size_t i = 0; i < rows.size(); ++i) {
-        double weight = weights[i];
-        double simEvents = static_cast<double>(rows[i].nEvents);
-        double expectedEvents = weight * simEvents;
-        double xsec = rows[i].crossSectionPb;
-        double thisLum = expectedEvents / xsec;
-        reconstructedLum += thisLum;
-    }
-    std::cout << "\t [FileDataSummary] Reconstructed Lumi from scaling = " << reconstructedLum << " pb^-1" << std::endl;
-    std::cout << "\t [FileDataSummary] Expected lumi from en_lumi.csv = " << realLum << " pb^-1" << std::endl;
     
     return weights;
 }

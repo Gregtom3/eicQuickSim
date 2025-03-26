@@ -26,7 +26,7 @@ int main() {
     auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, 3, MAX_EVENTS);
     
     // Combine all rows into one vector.
-    std::vector<std::vector<CSVRow>> groups = { rows_1_10, rows_10_100, rows_100_1000 };
+    std::vector<std::vector<CSVRow>> groups = { rows_1_10, rows_10_100, rows_100_1000};
     std::vector<CSVRow> combinedRows = FileManager::combineCSV(groups);
     std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
