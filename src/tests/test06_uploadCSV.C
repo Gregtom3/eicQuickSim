@@ -18,7 +18,7 @@ int main() {
     std::vector<double> weights = summarizer.getWeights(rows);
 
     // Write the CSV with weights to a new file.
-    if (!fileDataSummary.exportCSVWithWeights(rows, weights, "artifacts/test06_10x100_Q2_10_100.csv")) {
+    if (!summarizer.exportCSVWithWeights(rows, weights, "artifacts/test06_10x100_Q2_10_100.csv")) {
         std::cerr << "Failed to export CSV with weights." << std::endl;
     }
 
