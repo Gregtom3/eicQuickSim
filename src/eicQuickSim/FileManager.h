@@ -12,6 +12,7 @@
  *  - eEnergy, hEnergy  integer beam energies
  *  - nEvents           how many events in that file
  *  - crossSectionPb    cross section in pb
+ *  - weight            scaling weight
  */
 struct CSVRow {
     std::string filename;
@@ -21,6 +22,7 @@ struct CSVRow {
     int         hEnergy;
     int         nEvents;
     double      crossSectionPb;
+    double      weight;
 };
 
 /**

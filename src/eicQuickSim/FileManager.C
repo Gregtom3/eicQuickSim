@@ -94,53 +94,46 @@ std::vector<std::string> FileManager::getFiles(int eEnergy, int hEnergy,
 CSVRow FileManager::parseLine(const std::string &line) const
 {
     CSVRow row;
-    row.filename.clear(); // make sure default is empty
+    row.filename.clear(); // ensure it's empty on error
 
     std::stringstream ss(line);
     std::string token;
-
-    // We'll read 7 columns
-    // If the CSV has more/fewer, handle carefully
     std::vector<std::string> fields;
+
     while (std::getline(ss, token, ',')) {
         fields.push_back(token);
     }
 
     if (fields.size() < 7) {
-        std::cerr << "[FileManager] Malformed CSV line (need 7 cols): " << line << std::endl;
-        return row; // row.filename stays empty => invalid
+        std::cerr << "[FileManager] Malformed CSV line (need at least 7 cols): " << line << std::endl;
+        return row;
     }
 
     try {
-        // 0) filename
-        row.filename = fields[0];
-
-        // 1) Q2_min
-        row.q2Min = std::stoi(fields[1]);
-
-        // 2) Q2_max
-        row.q2Max = std::stoi(fields[2]);
-
-        // 3) electron_energy
-        row.eEnergy = std::stoi(fields[3]);
-
-        // 4) hadron_energy
-        row.hEnergy = std::stoi(fields[4]);
-
-        // 5) n_events
-        row.nEvents = std::stoll(fields[5]);
-
-        // 6) cross_section_pb
+        row.filename       = fields[0];
+        row.q2Min          = std::stoi(fields[1]);
+        row.q2Max          = std::stoi(fields[2]);
+        row.eEnergy        = std::stoi(fields[3]);
+        row.hEnergy        = std::stoi(fields[4]);
+        row.nEvents        = std::stoll(fields[5]);
         row.crossSectionPb = std::stod(fields[6]);
+
+        // If there's a weight column, parse it
+        if (fields.size() >= 8) {
+            row.weight = std::stod(fields[7]);
+        } else {
+            row.weight = 0.0; // or 1.0 depending on your preferred default
+        }
+
     } catch (const std::exception &e) {
         std::cerr << "[FileManager] CSV parse error: " << e.what()
-                  << " on line: " << line << std::endl;
-        // Return row with empty filename => invalid
-        row.filename.clear();
+                << " on line: " << line << std::endl;
+        row.filename.clear(); // mark as invalid
     }
 
     return row;
 }
+ 
 
 /**
     * Return up to nRows of CSV data for the given (e,h,q2Min,q2Max).
