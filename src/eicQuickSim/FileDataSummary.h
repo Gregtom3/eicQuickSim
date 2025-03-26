@@ -36,6 +36,12 @@ public:
      */
      std::vector<double> getWeights(const std::vector<CSVRow>& rows) const;
 
+    /**
+     * Save CSV with Weights (used for HPC)
+    */
+    bool exportCSVWithWeights(const std::vector<CSVRow>& rows,
+            const std::vector<double>& weights,
+            const std::string &outFilePath) const;
 private:
 
     bool checkUniformEnergy(const std::vector<CSVRow>& rows) const;

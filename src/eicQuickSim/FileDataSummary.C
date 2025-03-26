@@ -262,3 +262,42 @@ std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows)
 
     return weights;
 }
+
+/**
+ * Save CSV with Weights (used for HPC)
+*/
+bool FileDataSummary::exportCSVWithWeights(const std::vector<CSVRow>& rows,
+                                           const std::vector<double>& weights,
+                                           const std::string &outFilePath) const
+{
+    // Ensure rows and weights have matching sizes.
+    if (rows.size() != weights.size()) {
+        std::cerr << "[FileDataSummary] Error: Mismatch between number of rows and weights." << std::endl;
+        return false;
+    }
+    
+    std::ofstream ofs(outFilePath);
+    if (!ofs.is_open()) {
+        std::cerr << "[FileDataSummary] Error: Unable to open output file: " << outFilePath << std::endl;
+        return false;
+    }
+    
+    // Write header with an extra column for weight.
+    ofs << "filename,Q2_min,Q2_max,electron_energy,hadron_energy,n_events,cross_section_pb,weight\n";
+    
+    // Write each row along with its corresponding weight.
+    for (size_t i = 0; i < rows.size(); ++i) {
+        const CSVRow& row = rows[i];
+        ofs << row.filename << ","
+            << row.q2Min << ","
+            << row.q2Max << ","
+            << row.eEnergy << ","
+            << row.hEnergy << ","
+            << row.nEvents << ","
+            << row.crossSectionPb << ","
+            << weights[i] << "\n";
+    }
+    
+    ofs.close();
+    return true;
+}

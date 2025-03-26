@@ -60,6 +60,7 @@ jobs:
         make test03_weightHistDIS
         make test04_printEvent
         make test05_weightHistSIDIS
+        make test06_uploadCSV
         EOF
 
     - name: Upload artifacts
