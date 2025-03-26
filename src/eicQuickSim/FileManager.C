@@ -122,7 +122,7 @@ CSVRow FileManager::parseLine(const std::string &line) const
         if (fields.size() >= 8) {
             row.weight = std::stod(fields[7]);
         } else {
-            row.weight = 0.0; // or 1.0 depending on your preferred default
+            row.weight = -1.0; 
         }
 
     } catch (const std::exception &e) {

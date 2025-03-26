@@ -29,7 +29,7 @@ int main() {
     FileManager fm_saved(outputPath);
     auto rows_saved = fm_saved.getAllCSVData(-1,-1);
     std::vector<double> weights_saved = summarizer.getWeights(rows_saved);
-
+    std::cout << "Loaded weights..." << std::endl;
     for(auto weight: weights_saved){
         std::cout << "Weight = " << weight << std::endl;
     }
