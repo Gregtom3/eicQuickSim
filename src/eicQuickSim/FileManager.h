@@ -12,6 +12,7 @@
  *  - eEnergy, hEnergy  integer beam energies
  *  - nEvents           how many events in that file
  *  - crossSectionPb    cross section in pb
+ *  - weight            scaling weight
  */
 struct CSVRow {
     std::string filename;
@@ -21,6 +22,7 @@ struct CSVRow {
     int         hEnergy;
     int         nEvents;
     double      crossSectionPb;
+    double      weight = -1.0;
 };
 
 /**
@@ -88,7 +90,12 @@ public:
      */
      std::vector<CSVRow> getCSVData(int eEnergy, int hEnergy, int q2Min, int q2Max,
         int nRowsRequested, int maxEvents = -1) const;
-
+    
+    /**
+     * Get all CSVData
+    */
+    std::vector<CSVRow> getAllCSVData(int nRowsRequested, int maxEvents) const;
+    
     /**
      * Combine any number of CSVData vectors into one.
     */

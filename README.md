@@ -15,7 +15,7 @@ git clone https://github.com/Gregtom3/eicQuickSim.git
 cd eicQuickSim
 ```
 
-### 2. Set up the EIC shell
+### 2. Set up the EIC shell 
 
 ```bash
 curl -L https://github.com/eic/eic-shell/raw/main/install.sh | bash

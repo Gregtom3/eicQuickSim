@@ -35,4 +35,7 @@ add_eic_test(test04_printEvent
 add_eic_test(test05_weightHistSIDIS    
     "src/tests/test05_weightHistSIDIS.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
     TRUE)
+add_eic_test(test06_uploadCSV    
+    "src/tests/test06_uploadCSV.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
+    TRUE)
 enable_testing()

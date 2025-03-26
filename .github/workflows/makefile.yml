@@ -57,7 +57,10 @@ jobs:
         make test00_readData
         make test01_grabFiles
         make test02_dataSummary
-        make test03_weightHist
+        make test03_weightHistDIS
+        make test04_printEvent
+        make test05_weightHistSIDIS
+        make test06_uploadCSV
         EOF
 
     - name: Upload artifacts
