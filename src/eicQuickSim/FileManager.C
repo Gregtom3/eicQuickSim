@@ -134,6 +134,34 @@ CSVRow FileManager::parseLine(const std::string &line) const
     return row;
 }
  
+/**
+ * Simple function to get all csvRowData 
+*/
+std::vector<CSVRow> FileManager::getAllCSVData(int nRowsRequested, int maxEvents) const
+{
+    // Combine all CSVRows from every key in the csvMap_
+    std::vector<CSVRow> allRows;
+    for (const auto &entry : csvMap_) {
+        // entry.second is a vector<CSVRow>
+        allRows.insert(allRows.end(), entry.second.begin(), entry.second.end());
+    }
+    
+    // If nRowsRequested is positive and less than total, trim the vector.
+    if (nRowsRequested > 0 && nRowsRequested < static_cast<int>(allRows.size())) {
+        allRows.resize(nRowsRequested);
+    }
+    
+    // If maxEvents is greater than 0, cap the nEvents in each CSVRow to maxEvents.
+    if (maxEvents > 0) {
+        for (auto &row : allRows) {
+            if (row.nEvents > maxEvents) {
+                row.nEvents = maxEvents;
+            }
+        }
+    }
+    
+    return allRows;
+}
 
 /**
     * Return up to nRows of CSV data for the given (e,h,q2Min,q2Max).

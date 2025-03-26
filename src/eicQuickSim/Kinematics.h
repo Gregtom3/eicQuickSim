@@ -46,10 +46,13 @@ public:
         searchParticle(const HepMC3::GenEvent& evt, int status, int pid);
 
     // Calculate xF for a hadron.
-    // q: virtual photon, p: hadron four-vector, pIn: nucleon target, W: invariant mass.
+    // q: virtual photon, h: hadron four-vector, pIn: nucleon target, W: invariant mass.
     static double xF(const TLorentzVector& q, const TLorentzVector& h,
                      const TLorentzVector& pIn, double W);
 
+    // Calculate z for a hadron
+    // q: virtual photon, h: hadron four-vector, pIn: nucleon target
+    static double z(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& pIn);
 private:
     disKinematics disKin_;
     sidisKinematics sidisKin_;

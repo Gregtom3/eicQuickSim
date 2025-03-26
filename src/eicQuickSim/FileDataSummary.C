@@ -195,35 +195,48 @@ double FileDataSummary::getTotalLuminosity(const std::vector<CSVRow>& rows) cons
 std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows) const
 {
     std::vector<double> weights;
-    if (rows.empty()) {
-        return weights; // empty
-    }
-    if (!checkUniformEnergy(rows)) {
-        // mismatch => return empty
+    if (rows.empty() || !checkUniformEnergy(rows)) {
         return weights;
     }
-
-    // figure out the single (e,h) for these rows
+    
+    // Check if the weight is user-defined in every row.
+    bool allUserWeightsDefined = true;
+    for (const auto& r : rows) {
+        // Assuming that a weight less than 0 means "not defined"
+        if (r.weight < 0) {
+            allUserWeightsDefined = false;
+            break;
+        }
+    }
+    if (allUserWeightsDefined) {
+        // Return the user-provided weights directly.
+        for (const auto& r : rows) {
+            weights.push_back(r.weight);
+        }
+        return weights;
+    }
+    
+    // Otherwise, calculate the weights from scratch.
+    // Get the experimental luminosity for these energies.
     int e = rows[0].eEnergy;
     int h = rows[0].hEnergy;
     EHKey key { e, h };
     auto it = realLumMap_.find(key);
     if (it == realLumMap_.end()) {
         std::cerr << "[FileDataSummary] No realLum found for e=" << e << ", h=" << h
-                  << " in en_lumi.csv\n";
+                << " in en_lumi.csv\n";
         return weights; // empty
     }
-    double realLum = it->second; // experimental luminosity from en_lumi.csv
-
-
-    // Step 1: Collect total number of events per unique (q2min, q2max)
+    double realLum = it->second;
+    
+    // Step 1: Count total events per unique (q2Min, q2Max) group.
     std::unordered_map<std::pair<int, int>, double, PairHash> q2GroupEventCounts;
     for (const auto& r : rows) {
         std::pair<int, int> q2key = {r.q2Min, r.q2Max};
         q2GroupEventCounts[q2key] += static_cast<double>(r.nEvents);
     }
-
-    // Step 2: Build weights
+    
+    // Step 2: Calculate weights based on cross sections and luminosity.
     weights.reserve(rows.size());
     for (const auto& r : rows) {
         double thisSimXsec = r.crossSectionPb;
@@ -235,19 +248,16 @@ std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows)
             weights.push_back(0.0);
             continue;
         }
-
+        
         double thisGroupEvents = it->second;
-
-        // Calculate expected number of events from this file as:
+        // Expected events from this file:
         double thisExpectedEvents = thisSimXsec * realLum * (thisSimEvents / thisGroupEvents) / q2GroupEventCounts.size();
-
-        // Scale factor
+        // Scale factor (weight):
         double scaledW = thisExpectedEvents / thisSimEvents;
         weights.push_back(scaledW);
     }
-
-
-    // Step 3: Verify that weights reconstruct the expected total luminosity
+    
+    // Step 3: Optionally, verify the reconstructed total luminosity.
     double reconstructedLum = 0.0;
     for (size_t i = 0; i < rows.size(); ++i) {
         double weight = weights[i];
@@ -259,9 +269,11 @@ std::vector<double> FileDataSummary::getWeights(const std::vector<CSVRow>& rows)
     }
     std::cout << "\t [FileDataSummary] Reconstructed Lumi from scaling = " << reconstructedLum << " pb^-1" << std::endl;
     std::cout << "\t [FileDataSummary] Expected lumi from en_lumi.csv = " << realLum << " pb^-1" << std::endl;
-
+    
     return weights;
 }
+ 
+
 
 /**
  * Save CSV with Weights (used for HPC)

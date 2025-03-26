@@ -26,28 +26,12 @@ int main() {
     }
 
     // Step 4: Re-load the CSV with weights and print out the weights
-    std::ifstream infile(outputPath);
-    if (!infile.is_open()) {
-        std::cerr << "Error opening file: " << outputPath << std::endl;
-        return 1;
+    FileManager fm_saved(outputPath);
+    auto rows_saved = fm_saved.getAllCSVData(-1,-1);
+    std::vector<double> weights_saved = summarizer.getWeights(rows_saved);
+
+    for(auto weight: weights_saved){
+        std::cout << "Weight = " << weight << std::endl;
     }
-    
-    std::string line;
-    bool isHeader = true;
-    std::cout << "\nLoaded Weights from CSV:" << std::endl;
-    while (std::getline(infile, line)) {
-        // Skip header line.
-        if (isHeader) {
-            isHeader = false;
-            continue;
-        }
-        
-        // Use the FileManager's parseLine to parse the CSV line.
-        CSVRow parsedRow = fm.parseLine(line);
-        std::cout << "File: " << parsedRow.filename
-                  << ", Weight: " << parsedRow.weight << std::endl;
-    }
-    
-    infile.close();
     return 0;
 }
