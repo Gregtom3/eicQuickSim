@@ -77,6 +77,38 @@ double Kinematics::z(const TLorentzVector& q, const TLorentzVector& h, const TLo
     return (pIn*h)/(pIn*q);
 }
 
+double Kinematics::phi(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& eIn){
+
+    TVector3 q3(q.Px(), q.Py(), q.Pz());
+    TVector3 l3(eIn.Px(), eIn.Py(), eIn.Pz());
+    TVector3 h3(h.Px(), h.Py(), h.Pz());
+
+    TVector3 qcrossl = q3.Cross(l3);
+    TVector3 qcrossh = q3.Cross(h3);
+
+    double factor1 = (qcrossl*h3)/std::abs(qcrossl*h3);
+    double factor2 = (qcrossl*qcrossh)/qcrossl.Mag()/qcrossh.Mag();
+    return factor1*acos(factor2);
+}
+
+double Kinematics::pT_lab(const TLorentzVector& h){
+    return h.Pt();
+}
+
+double Kinematics::eta(const TLorentzVector& h){
+    return h.PseudoRapidity();
+}
+
+double Kinematics::pT_com(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& pIn){
+    TLorentzVector com = q + pIn;
+    TVector3 comBOOST = com.BoostVector();
+    TLorentzVector qq = q;
+    TLorentzVector hh = h;
+    qq.Boost(-comBOOST);
+    hh.Boost(-comBOOST);
+    return hh.Pt(qq.Vect());
+}
+
 void Kinematics::computeSIDIS(const HepMC3::GenEvent& evt, int pid) {
     // Make sure DIS has been computed.
     if (disKin_.Q2 <= 0) {
@@ -92,7 +124,17 @@ void Kinematics::computeSIDIS(const HepMC3::GenEvent& evt, int pid) {
     for (auto& particle : finalParticles) {
         TLorentzVector hadron = buildFourVector(particle);
         double xf_val = xF(disKin_.q, hadron, disKin_.pIn, disKin_.W);
+        double eta_val = eta(hadron);
+        double z_val = z(disKin_.q, hadron, disKin_.pIn);
+        double phi_val = phi(disKin_.q, hadron, disKin_.eIn);
+        double pT_lab_val = pT_lab(hadron);
+        double pT_com_val = pT_com(disKin_.q, hadron, disKin_.pIn);
         sidisKin_.xF.push_back(xf_val);
+        sidisKin_.eta.push_back(eta_val);
+        sidisKin_.z.push_back(z_val);
+        sidisKin_.phi.push_back(phi_val);
+        sidisKin_.pT_lab.push_back(pT_lab_val);
+        sidisKin_.pT_com.push_back(pT_com_val);
     }
 }
 

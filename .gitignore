@@ -29,6 +29,9 @@ MANIFEST
 # eic-shell
 eic-shell/
 
+# tree
+tree.sh
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -179,3 +182,7 @@ cython_debug/
 .pypirc
 
 eic-shell
+
+# artifacts
+artifacts/*.png
+artifacts/*.csv

@@ -21,7 +21,12 @@ struct disKinematics {
 
 // Structure to hold SIDIS kinematics. For each event there may be multiple SIDIS values.
 struct sidisKinematics {
-    std::vector<double> xF;  // Feynman xF values for final state hadrons
+    std::vector<double> xF;     // Feynman xF
+    std::vector<double> eta;    // pseudorapidity
+    std::vector<double> z;      // z (energy fraction)
+    std::vector<double> phi;    // azimuthal angle (w.r.t gamma-N COM frame)
+    std::vector<double> pT_lab; // transverse momentum (w.r.t lab frame)
+    std::vector<double> pT_com; // transverse momentum (w.r.t gamma-N COM frame)
 };
 
 class Kinematics {
@@ -49,10 +54,25 @@ public:
     // q: virtual photon, h: hadron four-vector, pIn: nucleon target, W: invariant mass.
     static double xF(const TLorentzVector& q, const TLorentzVector& h,
                      const TLorentzVector& pIn, double W);
+   
+    // Calculate eta for a hadron
+    // h: hadron four-vector
+    static double eta(const TLorentzVector& h);
 
     // Calculate z for a hadron
     // q: virtual photon, h: hadron four-vector, pIn: nucleon target
     static double z(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& pIn);
+
+    // Calculate azimuthal phi for a hadron (gamma-N COM frame)
+    // q: virtual photon, h: hadron four-vector, eIn: electron beam
+    static double phi(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& eIn);
+
+    // Calculate pT for a hadron (lab frame)
+    static double pT_lab(const TLorentzVector& h);
+
+    // Calculate pT for a hadron (gamma-N COM frame)
+    // q: virtual photon, h: hadron four-vector, pIn: nucleon target
+    static double pT_com(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& pIn);
 private:
     disKinematics disKin_;
     sidisKinematics sidisKin_;
