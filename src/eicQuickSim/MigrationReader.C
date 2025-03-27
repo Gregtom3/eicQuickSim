@@ -32,6 +32,9 @@ MigrationReader::MigrationReader(const std::string &yamlFilePath) {
         for (size_t j = 0; j < edgesNode.size(); j++) {
             edges.push_back(edgesNode[j].as<double>());
         }
+        // Check: number of edges must equal dims[i] + 1.
+        if (edges.size() != dims[i] + 1)
+            throw runtime_error("Mismatch in number of bin edges for dimension " + dimensionNames[i]);
         binEdges.push_back(edges);
     }
     
@@ -42,13 +45,13 @@ MigrationReader::MigrationReader(const std::string &yamlFilePath) {
     }
     
     // Read the migration response matrix.
-    YAML::Node migrationResponseNode = config["migration_response"];
-    if (migrationResponseNode.size() != (unsigned)totalBins)
+    YAML::Node mResp = config["migration_response"];
+    if (mResp.size() != (unsigned)totalBins)
         throw runtime_error("Mismatch in migration_response matrix row count.");
     
     migrationResponse.resize(totalBins, vector<double>(totalBins, 0.0));
     for (int i = 0; i < totalBins; i++) {
-        YAML::Node row = migrationResponseNode[i];
+        YAML::Node row = mResp[i];
         if (row.size() != (unsigned)totalBins) {
             ostringstream oss;
             oss << "Row " << i << " of migration_response has wrong size.";
@@ -103,6 +106,10 @@ const vector<double>& MigrationReader::getBinEdges(int dimIndex) const {
     return binEdges[dimIndex];
 }
 
+vector<vector<double>> MigrationReader::getAllBinEdges() const {
+    return binEdges;
+}
+
 double MigrationReader::getResponse(int trueFlat, int recoFlat) const {
     int total = getTotalBins();
     if (trueFlat < 0 || trueFlat >= total || recoFlat < 0 || recoFlat >= total)
@@ -125,6 +132,33 @@ double MigrationReader::getResponse(const vector<int>& trueBins, const vector<in
         multiplier *= dims[d];
     }
     return getResponse(flatTrue, flatReco);
+}
+
+int MigrationReader::getAbsoluteBinNumber(const vector<int>& multiIndices) const {
+    if (multiIndices.size() != dims.size())
+        throw invalid_argument("Number of indices must match number of dimensions");
+    
+    int flatIndex = 0, multiplier = 1;
+    for (int d = dims.size() - 1; d >= 0; d--) {
+        if (multiIndices[d] < 0 || multiIndices[d] >= dims[d])
+            throw out_of_range("Dimension index out of range in dimension " + to_string(d));
+        flatIndex += multiIndices[d] * multiplier;
+        multiplier *= dims[d];
+    }
+    return flatIndex;
+}
+
+vector<double> MigrationReader::predictEvents(int trueAbsoluteBin, double events) const {
+    int total = getTotalBins();
+    if (trueAbsoluteBin < 0 || trueAbsoluteBin >= total)
+        throw out_of_range("True bin absolute index out of bounds");
+    
+    vector<double> prediction(total, 0.0);
+    // For each reco bin, predicted events = (response percentage / 100) * events.
+    for (int j = 0; j < total; j++) {
+        prediction[j] = migrationResponse[trueAbsoluteBin][j] / 100.0 * events;
+    }
+    return prediction;
 }
 
 vector<int> MigrationReader::unflattenIndex(int flatIndex) const {
@@ -178,34 +212,4 @@ void MigrationReader::printSummary() const {
         }
         cout << endl;
     }
-}
-
-// New function: getAbsoluteBinNumber from multi-index.
-int MigrationReader::getAbsoluteBinNumber(const vector<int>& multiIndices) const {
-    if (multiIndices.size() != dims.size())
-        throw invalid_argument("Number of indices must match number of dimensions");
-    
-    int flatIndex = 0;
-    int multiplier = 1;
-    for (int d = dims.size() - 1; d >= 0; d--) {
-        if (multiIndices[d] < 0 || multiIndices[d] >= dims[d])
-            throw out_of_range("Dimension index out of range in dimension " + to_string(d));
-        flatIndex += multiIndices[d] * multiplier;
-        multiplier *= dims[d];
-    }
-    return flatIndex;
-}
-
-// New function: predictEvents() given an absolute true bin and number of events.
-vector<double> MigrationReader::predictEvents(int trueAbsoluteBin, double events) const {
-    int total = getTotalBins();
-    if (trueAbsoluteBin < 0 || trueAbsoluteBin >= total)
-        throw out_of_range("True bin absolute index out of range");
-    
-    vector<double> prediction(total, 0.0);
-    // For each reco bin, predicted events = (response percentage / 100) * events.
-    for (int i = 0; i < total; i++) {
-        prediction[i] = migrationResponse[trueAbsoluteBin][i] / 100.0 * events;
-    }
-    return prediction;
 }

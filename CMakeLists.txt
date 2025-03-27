@@ -24,35 +24,33 @@ link_directories("${YAML_CPP_BUILD_DIR}")
 # Link yaml-cpp to all targets
 set(YAML_CPP_LIBRARIES yaml-cpp)
 
-# Macro for adding test executables
-function(add_eic_test name sources use_hepmc)
-    add_executable(${name} ${sources})
-    target_link_libraries(${name} PRIVATE ${ROOT_LIBRARIES} yaml-cpp)
-    if (${use_hepmc})
-        target_link_libraries(${name} PRIVATE
-            "${HEPMC3_LIB_DIR}/libHepMC3.so"
-            "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so"
-        )
-    endif()
+# Include our source directory.
+include_directories(${CMAKE_SOURCE_DIR}/src/eicQuickSim)
+
+# Collect all common eicQuickSim sources.
+file(GLOB EIC_SOURCES ${CMAKE_SOURCE_DIR}/src/eicQuickSim/*.C)
+
+# Macro for adding test executables.
+# Each test executable will consist of:
+#   - Its specific test source file(s) (from src/tests)
+#   - All common sources in src/eicQuickSim/*.C
+# It will be linked against ROOT, yaml-cpp, and the HepMC3 libraries.
+function(add_eic_test name test_sources)
+    add_executable(${name} ${test_sources} ${EIC_SOURCES})
+    target_link_libraries(${name} PRIVATE ${ROOT_LIBRARIES} yaml-cpp
+        "${HEPMC3_LIB_DIR}/libHepMC3.so" "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so")
     add_test(NAME ${name}Test COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
 endfunction()
 
-# Register tests
-add_eic_test(test00_readData      "src/tests/test00_readData.C"         TRUE)
-add_eic_test(test01_grabFiles     "src/tests/test01_grabFiles.C;src/eicQuickSim/FileManager.C" FALSE)
-add_eic_test(test02_dataSummary   "src/tests/test02_dataSummary.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C" FALSE)
-add_eic_test(test03_weightHistDIS    
-    "src/tests/test03_weightHistDIS.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
-    TRUE)
-add_eic_test(test04_printEvent    
-    "src/tests/test04_printEvent.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
-    TRUE)
-add_eic_test(test05_weightHistSIDIS    
-    "src/tests/test05_weightHistSIDIS.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
-    TRUE)
-add_eic_test(test06_uploadCSV    
-    "src/tests/test06_uploadCSV.C;src/eicQuickSim/FileManager.C;src/eicQuickSim/FileDataSummary.C;src/eicQuickSim/Kinematics.C" 
-    TRUE)
-add_eic_test(test07_migrationReader "src/tests/test07_migrationReader.C;src/eicQuickSim/MigrationReader.C" FALSE)
+# Register tests.
+add_eic_test(test00_readData      "src/tests/test00_readData.C")
+add_eic_test(test01_grabFiles     "src/tests/test01_grabFiles.C")
+add_eic_test(test02_dataSummary   "src/tests/test02_dataSummary.C")
+add_eic_test(test03_weightHistDIS "src/tests/test03_weightHistDIS.C")
+add_eic_test(test04_printEvent    "src/tests/test04_printEvent.C")
+add_eic_test(test05_weightHistSIDIS "src/tests/test05_weightHistSIDIS.C")
+add_eic_test(test06_uploadCSV     "src/tests/test06_uploadCSV.C")
+add_eic_test(test07_migrationReader "src/tests/test07_migrationReader.C")
+add_eic_test(test08_migrationHist "src/tests/test08_migrationHist.C")
 
 enable_testing()

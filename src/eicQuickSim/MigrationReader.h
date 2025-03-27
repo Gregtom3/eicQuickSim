@@ -28,6 +28,9 @@ public:
     // Get the bin edges for a given dimension.
     const std::vector<double>& getBinEdges(int dimIndex) const;
     
+    // Get all bin edges for all dimensions.
+    std::vector<std::vector<double>> getAllBinEdges() const;
+    
     // Get the migration response given overall (flat) indices for the true and reco bins.
     double getResponse(int trueFlat, int recoFlat) const;
     
