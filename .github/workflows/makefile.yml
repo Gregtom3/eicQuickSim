@@ -51,16 +51,52 @@ jobs:
         make all
         EOF
 
-    - name: Run tests in eic-shell
+    - name: Run test00_readData
       run: |
         ./eic-shell <<'EOF'
         make test00_readData
+        EOF
+
+    - name: Run test01_grabFiles
+      run: |
+        ./eic-shell <<'EOF'
         make test01_grabFiles
+        EOF
+
+    - name: Run test02_dataSummary
+      run: |
+        ./eic-shell <<'EOF'
         make test02_dataSummary
+        EOF
+
+    - name: Run test03_weightHistDIS
+      run: |
+        ./eic-shell <<'EOF'
         make test03_weightHistDIS
+        EOF
+
+    - name: Run test04_printEvent
+      run: |
+        ./eic-shell <<'EOF'
         make test04_printEvent
+        EOF
+
+    - name: Run test05_weightHistSIDIS
+      run: |
+        ./eic-shell <<'EOF'
         make test05_weightHistSIDIS
+        EOF
+
+    - name: Run test06_uploadCSV
+      run: |
+        ./eic-shell <<'EOF'
         make test06_uploadCSV
+        EOF
+
+    - name: Run test07_migrationReader
+      run: |
+        ./eic-shell <<'EOF'
+        make test07_migrationReader
         EOF
 
     - name: Upload artifacts

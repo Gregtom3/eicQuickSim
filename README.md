@@ -10,8 +10,10 @@ First, make sure you have [Apptainer](https://apptainer.org) or [Singularity v3+
 
 ### 1. Clone the repo
 
+The `--recursive` flag ensures we install the `yaml-cpp` package, which is not included in `eic-shell` by default.
+
 ```bash
-git clone https://github.com/Gregtom3/eicQuickSim.git
+git clone --recursive https://github.com/Gregtom3/eicQuickSim.git
 cd eicQuickSim
 ```
 
