@@ -40,7 +40,9 @@ void Kinematics::computeDIS(const HepMC3::GenEvent& evt) {
     auto scatElectrons = searchParticle(evt, 21, 11);
     // Find target hadron (pIn): status==4, pid==2112.
     auto initHadrons = searchParticle(evt, 4, 2112);
-
+    if(initHadrons.empty()){ // try proton
+        initHadrons = searchParticle(evt, 4, 2212);
+    }
     if (initElectrons.empty() || scatElectrons.empty() || initHadrons.empty()) {
         std::cerr << "Kinematics::computeDIS: Required DIS particle(s) not found." << std::endl;
         return;

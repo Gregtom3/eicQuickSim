@@ -53,4 +53,12 @@ add_eic_test(test06_uploadCSV     "src/tests/test06_uploadCSV.C")
 add_eic_test(test07_migrationReader "src/tests/test07_migrationReader.C")
 add_eic_test(test08_migrationHist "src/tests/test08_migrationHist.C")
 
+# --- New executable target for analysis_epDIS ---
+# This target compiles macros/analysis_epDIS.C along with common sources.
+add_executable(analysis_epDIS macros/analysis_epDIS.C ${EIC_SOURCES})
+target_link_libraries(analysis_epDIS PRIVATE ${ROOT_LIBRARIES} yaml-cpp
+    "${HEPMC3_LIB_DIR}/libHepMC3.so" "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so")
+# Install the analysis_epDIS executable into the bin directory.
+install(TARGETS analysis_epDIS RUNTIME DESTINATION bin)
+
 enable_testing()
