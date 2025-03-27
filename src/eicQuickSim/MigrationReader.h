@@ -37,6 +37,13 @@ public:
     // Print a summary of the migration matrix with detailed bin descriptions.
     void printSummary() const;
     
+    // Convert a multi-dimensional bin index into a flat (absolute) bin number.
+    int getAbsoluteBinNumber(const std::vector<int>& multiIndices) const;
+    
+    // Predict how many events will migrate from a given true bin (absolute) to all reco bins.
+    // The output vector has the same size as the flattened migration response matrix.
+    std::vector<double> predictEvents(int trueAbsoluteBin, double events) const;
+    
 private:
     // Helper: Convert a flat index into a multi-index vector given dims.
     std::vector<int> unflattenIndex(int flatIndex) const;

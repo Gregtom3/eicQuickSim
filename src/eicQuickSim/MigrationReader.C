@@ -16,7 +16,7 @@ MigrationReader::MigrationReader(const std::string &yamlFilePath) {
         throw runtime_error("YAML file missing 'energy_config'.");
     if (!config["dimensions"])
         throw runtime_error("YAML file missing 'dimensions'.");
-
+    
     energyConfig = config["energy_config"].as<string>();
     YAML::Node dimensions = config["dimensions"];
     if (!dimensions["names"] || !dimensions["dims"] || !dimensions["bin_edges"])
@@ -27,38 +27,28 @@ MigrationReader::MigrationReader(const std::string &yamlFilePath) {
     
     // Load bin edges for each dimension (keyed by dimension name).
     for (size_t i = 0; i < dimensionNames.size(); i++) {
-        string name = dimensionNames[i];
-        if (!dimensions["bin_edges"][name])
-            throw runtime_error("YAML file missing bin edges for dimension: " + name);
-        YAML::Node edgesNode = dimensions["bin_edges"][name];
+        YAML::Node edgesNode = dimensions["bin_edges"][ dimensionNames[i] ];
         vector<double> edges;
         for (size_t j = 0; j < edgesNode.size(); j++) {
             edges.push_back(edgesNode[j].as<double>());
         }
-        // Check: number of edges must equal dims[i] + 1.
-        if (edges.size() != dims[i] + 1) {
-            ostringstream oss;
-            oss << "Dimension " << name << " has " << edges.size() 
-                << " edges but expected " << dims[i] + 1;
-            throw runtime_error(oss.str());
-        }
         binEdges.push_back(edges);
     }
     
-    // Load the migration response matrix.
-    if (!config["migration_response"])
-        throw runtime_error("YAML file missing 'migration_response'.");
-    YAML::Node mResp = config["migration_response"];
+    // Compute total number of bins (flattened) for true (and reco) space.
     int totalBins = 1;
-    for (auto d : dims)
-        totalBins *= d;
+    for (size_t i = 0; i < dims.size(); i++) {
+        totalBins *= dims[i];
+    }
     
-    if (mResp.size() != (unsigned)totalBins)
-        throw runtime_error("Mismatch in migration_response row count.");
+    // Read the migration response matrix.
+    YAML::Node migrationResponseNode = config["migration_response"];
+    if (migrationResponseNode.size() != (unsigned)totalBins)
+        throw runtime_error("Mismatch in migration_response matrix row count.");
     
     migrationResponse.resize(totalBins, vector<double>(totalBins, 0.0));
     for (int i = 0; i < totalBins; i++) {
-        YAML::Node row = mResp[i];
+        YAML::Node row = migrationResponseNode[i];
         if (row.size() != (unsigned)totalBins) {
             ostringstream oss;
             oss << "Row " << i << " of migration_response has wrong size.";
@@ -137,7 +127,6 @@ double MigrationReader::getResponse(const vector<int>& trueBins, const vector<in
     return getResponse(flatTrue, flatReco);
 }
 
-// Helper: Convert a flat index to multi-index.
 vector<int> MigrationReader::unflattenIndex(int flatIndex) const {
     int total = getTotalBins();
     if (flatIndex < 0 || flatIndex >= total)
@@ -150,7 +139,6 @@ vector<int> MigrationReader::unflattenIndex(int flatIndex) const {
     return indices;
 }
 
-// Helper: Build a string describing a bin from its multi-index.
 string MigrationReader::buildBinDescription(const vector<int>& multiIndex) const {
     if (multiIndex.size() != dims.size())
         throw invalid_argument("Multi-index size does not match number of dimensions");
@@ -190,4 +178,34 @@ void MigrationReader::printSummary() const {
         }
         cout << endl;
     }
+}
+
+// New function: getAbsoluteBinNumber from multi-index.
+int MigrationReader::getAbsoluteBinNumber(const vector<int>& multiIndices) const {
+    if (multiIndices.size() != dims.size())
+        throw invalid_argument("Number of indices must match number of dimensions");
+    
+    int flatIndex = 0;
+    int multiplier = 1;
+    for (int d = dims.size() - 1; d >= 0; d--) {
+        if (multiIndices[d] < 0 || multiIndices[d] >= dims[d])
+            throw out_of_range("Dimension index out of range in dimension " + to_string(d));
+        flatIndex += multiIndices[d] * multiplier;
+        multiplier *= dims[d];
+    }
+    return flatIndex;
+}
+
+// New function: predictEvents() given an absolute true bin and number of events.
+vector<double> MigrationReader::predictEvents(int trueAbsoluteBin, double events) const {
+    int total = getTotalBins();
+    if (trueAbsoluteBin < 0 || trueAbsoluteBin >= total)
+        throw out_of_range("True bin absolute index out of range");
+    
+    vector<double> prediction(total, 0.0);
+    // For each reco bin, predicted events = (response percentage / 100) * events.
+    for (int i = 0; i < total; i++) {
+        prediction[i] = migrationResponse[trueAbsoluteBin][i] / 100.0 * events;
+    }
+    return prediction;
 }
