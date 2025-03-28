@@ -1,5 +1,5 @@
 #include "FileManager.h"
-#include "FileDataSummary.h"
+#include "Weights.h"
 #include "Kinematics.h"
 
 // ROOT & HepMC3 includes:
@@ -30,14 +30,11 @@ int main() {
     std::vector<CSVRow> combinedRows = FileManager::combineCSV(groups);
     std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
-    // Step 2: Load experimental luminosity info and compute scaled weights.
-    FileDataSummary summarizer("src/eicQuickSim/en_lumi.csv");
-    auto weights = summarizer.getWeights(combinedRows);
-    if (weights.size() != combinedRows.size()) {
-        std::cerr << "Error: Number of scaled weights does not match number of CSV rows.\n";
-        return 1;
-    }
-    
+    // Step 2: Get Q2 weights
+    Weights q2Weights(combinedRows);
+    // Load in experimental luminosity to scale weights
+    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+
     // Step 3: Create global histograms.
     // Q2 histogram: logarithmic bins (Q2 range from 0.1 to 1000 GeV^2).
     int nBins = 100;
@@ -70,10 +67,9 @@ int main() {
     // Step 4: Process each CSVRow.
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
-        double fileWeight = weights[i];
         
         std::string fullPath = row.filename;
-        std::cout << "Processing file: " << fullPath << " with weight " << fileWeight << std::endl;
+        std::cout << "Processing file: " << fullPath << std::endl;
         
         ReaderRootTree root_input(fullPath);
         if (root_input.failed()) {
@@ -91,8 +87,9 @@ int main() {
             eicQuickSim::Kinematics kin;
             kin.computeDIS(evt);
             eicQuickSim::disKinematics dis = kin.getDISKinematics();
+            double eventWeight = q2Weights.getWeight(dis.Q2);
             if (dis.Q2 > 0) {
-                hQ2->Fill(dis.Q2, fileWeight);
+                hQ2->Fill(dis.Q2, eventWeight);
             }
         }
         root_input.close();

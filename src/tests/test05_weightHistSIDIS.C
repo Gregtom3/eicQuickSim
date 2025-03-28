@@ -1,5 +1,5 @@
 #include "FileManager.h"
-#include "FileDataSummary.h"
+#include "Weights.h"
 #include "Kinematics.h"
 
 // ROOT & HepMC3 includes:
@@ -25,13 +25,10 @@ int main() {
     std::vector<CSVRow> combinedRows = FileManager::combineCSV(groups);
     std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
-    // --- Step 2: Load luminosity info and get scaled weights ---
-    FileDataSummary summarizer("src/eicQuickSim/en_lumi.csv");
-    auto weights = summarizer.getWeights(combinedRows);
-    if (weights.size() != combinedRows.size()) {
-        std::cerr << "Error: Number of weights does not match CSV rows.\n";
-        return 1;
-    }
+    // Step 2: Get Q2 weights
+    Weights q2Weights(combinedRows);
+    // Load in experimental luminosity to scale weights
+    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
     
     // --- Step 3: Create SIDIS histograms for both π⁺ and π⁻ ---
     // (1) xF histograms (existing)
@@ -111,9 +108,8 @@ int main() {
     // --- Step 4: Process each CSVRow and fill all SIDIS histograms ---
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
-        double fileWeight = weights[i];
         std::string fullPath = row.filename;
-        std::cout << "Processing file: " << fullPath << " with weight " << fileWeight << std::endl;
+        std::cout << "Processing file: " << fullPath << std::endl;
         
         ReaderRootTree root_input(fullPath);
         if (root_input.failed()) {
@@ -128,10 +124,12 @@ int main() {
             if (root_input.failed()) break;
             eventsParsed++;
             
-            // Compute DIS kinematics (if needed for other purposes)
+            // Compute DIS kinematics
             eicQuickSim::Kinematics kin;
             kin.computeDIS(evt);
-            
+            eicQuickSim::disKinematics dis = kin.getDISKinematics();
+            double eventWeight = q2Weights.getWeight(dis.Q2);
+
             // Compute SIDIS for π⁺ (pid==211)
             kin.computeSIDIS(evt, 211);
             eicQuickSim::sidisKinematics sidis_piPlus = kin.getSIDISKinematics();
@@ -142,50 +140,50 @@ int main() {
             
             // Fill xF histograms.
             for (double xf_val : sidis_piPlus.xF) {
-                h_xF_piPlus->Fill(xf_val, fileWeight);
+                h_xF_piPlus->Fill(xf_val, eventWeight);
             }
             for (double xf_val : sidis_piMinus.xF) {
-                h_xF_piMinus->Fill(xf_val, fileWeight);
+                h_xF_piMinus->Fill(xf_val, eventWeight);
             }
             
             // Fill z histograms.
             for (double z_val : sidis_piPlus.z) {
-                h_z_piPlus->Fill(z_val, fileWeight);
+                h_z_piPlus->Fill(z_val, eventWeight);
             }
             for (double z_val : sidis_piMinus.z) {
-                h_z_piMinus->Fill(z_val, fileWeight);
+                h_z_piMinus->Fill(z_val, eventWeight);
             }
             
             // Fill φ (phi) histograms.
             for (double phi_val : sidis_piPlus.phi) {
-                h_phi_piPlus->Fill(phi_val, fileWeight);
+                h_phi_piPlus->Fill(phi_val, eventWeight);
             }
             for (double phi_val : sidis_piMinus.phi) {
-                h_phi_piMinus->Fill(phi_val, fileWeight);
+                h_phi_piMinus->Fill(phi_val, eventWeight);
             }
             
             // Fill pT_lab histograms.
             for (double pt_val : sidis_piPlus.pT_lab) {
-                h_pT_lab_piPlus->Fill(pt_val, fileWeight);
+                h_pT_lab_piPlus->Fill(pt_val, eventWeight);
             }
             for (double pt_val : sidis_piMinus.pT_lab) {
-                h_pT_lab_piMinus->Fill(pt_val, fileWeight);
+                h_pT_lab_piMinus->Fill(pt_val, eventWeight);
             }
             
             // Fill pT_com histograms.
             for (double pt_val : sidis_piPlus.pT_com) {
-                h_pT_com_piPlus->Fill(pt_val, fileWeight);
+                h_pT_com_piPlus->Fill(pt_val, eventWeight);
             }
             for (double pt_val : sidis_piMinus.pT_com) {
-                h_pT_com_piMinus->Fill(pt_val, fileWeight);
+                h_pT_com_piMinus->Fill(pt_val, eventWeight);
             }
             
             // Fill η histograms
             for (double eta_val : sidis_piPlus.eta) {
-                h_eta_piPlus->Fill(eta_val, fileWeight);
+                h_eta_piPlus->Fill(eta_val, eventWeight);
             }
             for (double eta_val : sidis_piMinus.eta) {
-                h_eta_piMinus->Fill(eta_val, fileWeight);
+                h_eta_piMinus->Fill(eta_val, eventWeight);
             }
         }
         root_input.close();

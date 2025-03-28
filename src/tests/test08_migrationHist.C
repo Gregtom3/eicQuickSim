@@ -1,6 +1,6 @@
 #include "MigrationReader.h"
 #include "FileManager.h"
-#include "FileDataSummary.h"
+#include "Weights.h"
 #include "Kinematics.h"
 #include "HepMC3/ReaderRootTree.h"
 #include "HepMC3/GenEvent.h"
@@ -47,19 +47,15 @@ int main() {
     cout << "Combined " << combinedRows.size() << " CSV rows." << endl;
     
     // Get weights.
-    FileDataSummary summarizer("src/eicQuickSim/en_lumi.csv");
-    auto weights = summarizer.getWeights(combinedRows);
-    if (weights.size() != combinedRows.size()) {
-        cerr << "Error: Number of weights does not match CSV rows." << endl;
-        return 1;
-    }
+    Weights q2Weights(combinedRows);
+    // Load in experimental luminosity to scale weights
+    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/ep_lumi.csv");
     
     // Loop over .root files and fill the true histogram.
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
-        double fileWeight = weights[i];
         string fullPath = row.filename;
-        cout << "Processing file: " << fullPath << " with weight " << fileWeight << endl;
+        cout << "Processing file: " << fullPath << std::endl;
         
         ReaderRootTree root_input(fullPath);
         if (root_input.failed()) {
@@ -76,8 +72,9 @@ int main() {
             eicQuickSim::Kinematics kin;
             kin.computeDIS(evt);
             eicQuickSim::disKinematics dis = kin.getDISKinematics();
+            double eventWeight = q2Weights.getWeight(dis.Q2);
             if (dis.Q2 > 0 && dis.x > 0)
-                hTrue->Fill(dis.x, dis.Q2, fileWeight);
+                hTrue->Fill(dis.x, dis.Q2, eventWeight);
         }
         root_input.close();
     }

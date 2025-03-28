@@ -37,7 +37,7 @@ void Kinematics::computeDIS(const HepMC3::GenEvent& evt) {
     // Find initial electron (eIn): status==4, pid==11.
     auto initElectrons = searchParticle(evt, 4, 11);
     // Find scattered electron (eOut): status==21, pid==11.
-    auto scatElectrons = searchParticle(evt, 21, 11);
+    auto scatElectrons = searchParticle(evt, 1, 11);
     // Find target hadron (pIn): status==4, pid==2112.
     auto initHadrons = searchParticle(evt, 4, 2112);
     if(initHadrons.empty()){ // try proton

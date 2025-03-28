@@ -1,6 +1,6 @@
 #include "FileManager.h"
-#include "FileDataSummary.h"
 #include "Kinematics.h"
+#include "Weights.h"
 
 // ROOT & HepMC3 includes:
 #include "HepMC3/GenEvent.h"
@@ -13,31 +13,31 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
 using namespace HepMC3;
+using std::cout;
+using std::endl;
 
+//------------------------------------------------------
+// Main analysis code
 int main() {
-    // Step 1: Load CSV data for the 5x41 configuration over three Q2 ranges.
+    // Step 1: Load CSV data to get the file list.
     FileManager fm("src/eicQuickSim/ep_files.csv");
-    
-    std::cout << "Loading CSV data for Q2 ranges: 1-10, 10-100, and 100-1000 for 5x41.\n";
-    const int MAX_EVENTS = 10000;
-    auto rows_1_10    = fm.getCSVData(5, 41, 1, 100000, 3, MAX_EVENTS);
-    
-    // Combine all rows into one vector.
-    std::vector<std::vector<CSVRow>> groups = { rows_1_10 };
+    cout << "Loading CSV data for 5x41 configuration.\n";
+    const int MAX_EVENTS = 1000;
+    auto rows_1 = fm.getCSVData(5, 41, 1, 100000, 3, MAX_EVENTS);
+    auto rows_10 = fm.getCSVData(5, 41, 10, 100000, 3, MAX_EVENTS);
+    auto rows_100 = fm.getCSVData(5, 41, 100, 100000, 3, MAX_EVENTS);
+    std::vector<std::vector<CSVRow>> groups = { rows_1, rows_10, rows_100 };
     std::vector<CSVRow> combinedRows = FileManager::combineCSV(groups);
-    std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
+    cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
-    // Step 2: Load experimental luminosity info and compute scaled weights.
-    FileDataSummary summarizer("src/eicQuickSim/en_lumi.csv");
-    auto weights = summarizer.getWeights(combinedRows);
-    if (weights.size() != combinedRows.size()) {
-        std::cerr << "Error: Number of scaled weights does not match number of CSV rows.\n";
-        return 1;
-    }
-    
+    // Step 2: Get Q2 weights
+    Weights q2Weights(combinedRows);
+    // Load in experimental luminosity to scale weights
+    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/ep_lumi.csv");
+
     // Step 3: Create global histograms.
-    // Q2 histogram: logarithmic bins (Q2 range from 0.1 to 1000 GeV^2).
     int nBins = 100;
     double q2Min = 0.1;
     double q2Max = 1000.0;
@@ -50,7 +50,6 @@ int main() {
     }
     TH1D* hQ2 = new TH1D("hQ2", "Q^{2} Distribution;Q^{2} [GeV^{2}];Weighted Event Count", nBins, logBins.data());
     
-    // Bjorken x histogram: log bins from 1e-5 to 1
     double xMin = 1e-5;
     double xMax = 1;
     std::vector<double> logXBins(nBins + 1);
@@ -62,20 +61,17 @@ int main() {
     }
     TH1D* hX = new TH1D("hX", "Bjorken x Distribution;x;Weighted Event Count", nBins, logXBins.data());
     
-    // W histogram: linear bins from 0 to 100 GeV.
     TH1D* hW = new TH1D("hW", "W Distribution;W [GeV];Weighted Event Count", 100, 0.0, 100.0);
     
-    // Step 4: Process each CSVRow.
+    // Step 4: Process each file
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
-        double fileWeight = weights[i];
-        
         std::string fullPath = row.filename;
-        std::cout << "Processing file: " << fullPath << " with weight " << fileWeight << std::endl;
+        cout << "Processing file: " << fullPath << endl;
         
         ReaderRootTree root_input(fullPath);
         if (root_input.failed()) {
-            std::cerr << "Failed to open file: " << fullPath << std::endl;
+            std::cerr << "Failed to open file: " << fullPath << endl;
             continue;
         }
         
@@ -89,15 +85,16 @@ int main() {
             eicQuickSim::Kinematics kin;
             kin.computeDIS(evt);
             eicQuickSim::disKinematics dis = kin.getDISKinematics();
-            if (dis.Q2 > 0) {
-                hQ2->Fill(dis.Q2, fileWeight);
-            }
+            // Compute the weight for this event based on its Q2
+            double eventWeight = q2Weights.getWeight(dis.Q2);
+            hQ2->Fill(dis.Q2, eventWeight);
+            hX->Fill(dis.x, eventWeight);
+            hW->Fill(dis.W, eventWeight);
         }
         root_input.close();
     }
     
     // Step 5: Save the histograms.
-    // Q2 histogram: log-scale canvas.
     TCanvas *c1 = new TCanvas("c1", "Q^{2} Distribution", 800, 600);
     c1->SetLogx();
     c1->SetLogy();
@@ -119,9 +116,8 @@ int main() {
     hQ2->SetStats(0);
     hQ2->Draw("HIST");
     c1->RedrawAxis();
-    c1->SaveAs("artifacts/test03_Q2hist.png");
+    c1->SaveAs("artifacts/analysis_epDIS_Q2hist.png");
     
-    // x histogram: linear-scale canvas.
     TCanvas *c2 = new TCanvas("c2", "Bjorken x Distribution", 800, 600);
     c2->SetMargin(0.12, 0.05, 0.12, 0.08);
     hX->SetTitle("Bjorken x Distribution (5x41)");
@@ -143,9 +139,8 @@ int main() {
     c2->SetLogy();
     hX->Draw("HIST");
     c2->RedrawAxis();
-    c2->SaveAs("artifacts/test03_xhist.png");
+    c2->SaveAs("artifacts/analysis_epDIS_xhist.png");
     
-    // W histogram: linear-scale canvas.
     TCanvas *c3 = new TCanvas("c3", "W Distribution", 800, 600);
     c3->SetMargin(0.12, 0.05, 0.12, 0.08);
     hW->SetTitle("W Distribution (5x41)");
@@ -165,8 +160,8 @@ int main() {
     hW->SetStats(0);
     hW->Draw("HIST");
     c3->RedrawAxis();
-    c3->SaveAs("artifacts/test03_Whist.png");
+    c3->SaveAs("artifacts/analysis_epDIS_Whist.png");
     
-    std::cout << "Saved histograms to artifacts directory.\n";
+    cout << "Saved histograms to artifacts directory.\n";
     return 0;
 }
