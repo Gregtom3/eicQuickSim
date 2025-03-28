@@ -1,5 +1,4 @@
 [![Build CI](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml/badge.svg)](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml)
-[![Monte Carlo Binning CI](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml/badge.svg)](https://github.com/Gregtom3/eicQuickSim/actions/workflows/binscheme-runner.yml)
 
 # eicQuickSim
 
