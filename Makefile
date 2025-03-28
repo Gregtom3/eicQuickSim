@@ -1,6 +1,6 @@
 .PHONY: install all build run clean tests \
         test00_readData test01_grabFiles test02_dataSummary test03_weightHistDIS \
-        test04_printEvent test05_weightHistSIDIS test06_uploadCSV yaml-cpp analysis_epDIS \
+        test04_printEvent test05_weightHistSIDIS test06_uploadCSV yaml-cpp analysis_DIS \
 		test07_epNevents
 
 BUILD_DIR = build
@@ -17,7 +17,7 @@ build:
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake -DCMAKE_INSTALL_PREFIX=$(PWD)/build .. && make
 
-# CMake install target to install executables (including analysis_epDIS)
+# CMake install target to install executables (including analysis_DIS)
 install_cmake: build
 	cd $(BUILD_DIR) && make install
 
@@ -28,9 +28,9 @@ install: install_requirements install_cmake
 $(TESTS): build
 	./$(BUILD_DIR)/$@
 
-# Run the analysis_epDIS executable
-analysis_epDIS: build
-	./$(BUILD_DIR)/analysis_epDIS
+# Run the analysis_DIS executable
+analysis_DIS: build
+	./$(BUILD_DIR)/analysis_DIS "5x41" 1 100 "ep" "src/bins/example.yaml"
 
 # Run all tests
 tests: build

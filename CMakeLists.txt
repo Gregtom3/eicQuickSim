@@ -52,12 +52,12 @@ add_eic_test(test05_weightHistSIDIS "src/tests/test05_weightHistSIDIS.C")
 add_eic_test(test06_uploadCSV     "src/tests/test06_uploadCSV.C")
 add_eic_test(test07_epNevents    "src/tests/test07_epNevents.C")
 
-# --- New executable target for analysis_epDIS ---
-# This target compiles macros/analysis_epDIS.C along with common sources.
-add_executable(analysis_epDIS macros/analysis_epDIS.C ${EIC_SOURCES})
-target_link_libraries(analysis_epDIS PRIVATE ${ROOT_LIBRARIES} yaml-cpp
+# --- New executable target for analysis_DIS ---
+# This target compiles macros/analysis_DIS.C along with common sources.
+add_executable(analysis_DIS macros/analysis_DIS.C ${EIC_SOURCES})
+target_link_libraries(analysis_DIS PRIVATE ${ROOT_LIBRARIES} yaml-cpp
     "${HEPMC3_LIB_DIR}/libHepMC3.so" "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so")
 # Install the analysis_epDIS executable into the bin directory.
-install(TARGETS analysis_epDIS RUNTIME DESTINATION bin)
+install(TARGETS analysis_DIS RUNTIME DESTINATION bin)
 
 enable_testing()
