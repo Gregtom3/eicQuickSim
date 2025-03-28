@@ -107,7 +107,10 @@ jobs:
       - name: Run simulation for ${{ matrix.energy }} / ${{ matrix.collision }} with ${{ matrix.binScheme }}
         run: |
           echo "Running simulation with energy ${{ matrix.energy }}, collision ${{ matrix.collision }}, binScheme ${{ matrix.binScheme }}"
+          ./eic-shell <<'EOF'
           ./build/analysis_DIS "${{ matrix.energy }}" 1 100 "${{ matrix.collision }}" "${{ matrix.binScheme }}"
+          EOF
+          
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
