@@ -1,5 +1,7 @@
 #include "FileManager.h"
+#include "CombinedRowsProcessor.h"
 #include "Weights.h"
+
 #include <iostream>
 #include <string>
 
@@ -44,11 +46,8 @@ int main(int argc, char* argv[]) {
     
     // Step 1: Construct the FileManager.
     FileManager fm(inputCSV);
-    
-    // Step 2: Get CSV data. Here, we assume a Q² range from 10 to 100.
-    cout << "Getting CSV data for energy configuration " << energyConfig 
-         << " with Q² range 10 to 100." << endl;
-    auto rows = fm.getCSVData(beamEnergy1, beamEnergy2, 10, 100, numFiles, maxEvents);
+    auto rows = CombinedRowsProcessor::getCombinedRows(energyConfig, numFiles, maxEvents, collisionType);
+    std::cout << "Combined " << rows.size() << " CSV rows." << std::endl;
     
     // Step 3: Get Q² weights.
     Weights q2Weights(rows);
