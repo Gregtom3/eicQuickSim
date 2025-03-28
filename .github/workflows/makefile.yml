@@ -94,6 +94,12 @@ jobs:
         ./eic-shell <<'EOF'
         make test06_uploadCSV
         EOF
+    
+    - name: Run test07_epNevents
+      run: |
+        ./eic-shell <<'EOF'
+        make test07_epNevents
+        EOF
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

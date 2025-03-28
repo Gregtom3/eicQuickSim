@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
+#include <algorithm>
 
 BinningScheme::BinningScheme(const std::string& yamlFilePath) {
     YAML::Node config = YAML::LoadFile(yamlFilePath);
@@ -73,4 +74,27 @@ const std::string& BinningScheme::getEnergyConfig() const {
 
 const std::vector<BinningScheme::Dimension>& BinningScheme::getDimensions() const {
     return dimensions;
+}
+
+std::vector<int> BinningScheme::findBins(const std::vector<double>& values) const {
+    if (values.size() != dimensions.size()) {
+        throw std::runtime_error("BinningScheme::findBins: Number of values does not match number of dimensions.");
+    }
+    std::vector<int> binIndices;
+    binIndices.reserve(dimensions.size());
+    for (size_t i = 0; i < dimensions.size(); ++i) {
+        double val = values[i];
+        const std::vector<double>& edges = dimensions[i].edges;
+        // Check if the value is below the first edge or above/equal to the last edge.
+        if (val < edges.front() || val >= edges.back()) {
+            binIndices.push_back(-1);
+        } else {
+            // Use std::upper_bound to find the first edge greater than val.
+            auto it = std::upper_bound(edges.begin(), edges.end(), val);
+            // The bin index is the index of the previous edge.
+            int index = std::distance(edges.begin(), it) - 1;
+            binIndices.push_back(index);
+        }
+    }
+    return binIndices;
 }

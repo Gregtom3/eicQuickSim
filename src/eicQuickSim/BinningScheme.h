@@ -20,6 +20,11 @@ public:
     // Accessors.
     const std::string& getEnergyConfig() const;
     const std::vector<Dimension>& getDimensions() const;
+    
+    // Given a vector of values (one per dimension, in order),
+    // returns a vector of bin indices (one per dimension).
+    // For each dimension, if the value is outside the [edge0, last_edge) range, returns -1.
+    std::vector<int> findBins(const std::vector<double>& values) const;
 
 private:
     std::string energy_config;
