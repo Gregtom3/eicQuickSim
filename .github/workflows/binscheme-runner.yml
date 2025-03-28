@@ -68,6 +68,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake
 
+      - name: Install eic-shell
+        run: |
+          curl -L https://github.com/eic/eic-shell/raw/main/install.sh | bash
+
       - name: Build project
         run: |
           # Assuming you use your eic-shell wrapper for the build.
