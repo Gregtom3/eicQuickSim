@@ -1,5 +1,5 @@
-[![Makefile CI](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml/badge.svg)](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml)
-
+[![Build CI](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml/badge.svg)](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml)
+[![Monte Carlo Binning CI](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml/badge.svg)](https://github.com/Gregtom3/eicQuickSim/actions/workflows/makefile.yml)
 # eicQuickSim
 
 This is a simulation and analysis framework for EIC-related studies. The purpose is to analyze electron+neutron Monte Carlo simulations to predict e+He3 yields at the future EIC. It uses [eic-shell](https://github.com/eic/eic-shell) to provide a preconfigured environment with ROOT and other dependencies.
