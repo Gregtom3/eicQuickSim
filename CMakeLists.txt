@@ -31,10 +31,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/eicQuickSim)
 file(GLOB EIC_SOURCES ${CMAKE_SOURCE_DIR}/src/eicQuickSim/*.C)
 
 # Macro for adding test executables.
-# Each test executable will consist of:
-#   - Its specific test source file(s) (from src/tests)
-#   - All common sources in src/eicQuickSim/*.C
-# It will be linked against ROOT, yaml-cpp, and the HepMC3 libraries.
 function(add_eic_test name test_sources)
     add_executable(${name} ${test_sources} ${EIC_SOURCES})
     target_link_libraries(${name} PRIVATE ${ROOT_LIBRARIES} yaml-cpp
@@ -50,14 +46,18 @@ add_eic_test(test03_weightHistDIS "src/tests/test03_weightHistDIS.C")
 add_eic_test(test04_printEvent    "src/tests/test04_printEvent.C")
 add_eic_test(test05_weightHistSIDIS "src/tests/test05_weightHistSIDIS.C")
 add_eic_test(test06_uploadCSV     "src/tests/test06_uploadCSV.C")
-add_eic_test(test07_epNevents    "src/tests/test07_epNevents.C")
+add_eic_test(test07_epNevents     "src/tests/test07_epNevents.C")
 
-# --- New executable target for analysis_DIS ---
-# This target compiles macros/analysis_DIS.C along with common sources.
-add_executable(analysis_DIS macros/analysis_DIS.C ${EIC_SOURCES})
-target_link_libraries(analysis_DIS PRIVATE ${ROOT_LIBRARIES} yaml-cpp
-    "${HEPMC3_LIB_DIR}/libHepMC3.so" "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so")
-# Install the analysis_epDIS executable into the bin directory.
-install(TARGETS analysis_DIS RUNTIME DESTINATION bin)
+# New function for adding macro executables.
+function(add_eic_executable targetName macroSource)
+    add_executable(${targetName} ${macroSource} ${EIC_SOURCES})
+    target_link_libraries(${targetName} PRIVATE ${ROOT_LIBRARIES} yaml-cpp
+        "${HEPMC3_LIB_DIR}/libHepMC3.so" "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so")
+    install(TARGETS ${targetName} RUNTIME DESTINATION bin)
+endfunction()
+
+# Register macro executables using the new function.
+add_eic_executable(analysis_DIS macros/analysis_DIS.C)
+add_eic_executable(preprocess_HPC macros/preprocess_HPC.C)
 
 enable_testing()
