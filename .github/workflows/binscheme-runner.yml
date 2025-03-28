@@ -1,0 +1,87 @@
+name: Continuous Deployment for Binning Scheme Updates
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'src/bins/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'src/bins/**'
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate dynamic matrix
+        id: set-matrix
+        run: |
+          echo "Finding YAML files in src/bins..."
+          # Find YAML files in src/bins (only top-level, adjust -maxdepth if needed)
+          bin_files=$(find src/bins -maxdepth 1 -type f -name '*.yaml')
+          echo "Found YAML files:"
+          echo "$bin_files"
+          
+          # Define the energies and collision types
+          energies=("5x41" "10x100" "18x275")
+          collisions=("ep" "en")
+          
+          # Build the matrix JSON string
+          matrix_json="{\"include\": ["
+          first=1
+          for energy in "${energies[@]}"; do
+            for collision in "${collisions[@]}"; do
+              for file in $bin_files; do
+                if [ $first -eq 1 ]; then
+                  first=0
+                else
+                  matrix_json+=","
+                fi
+                # Add an entry with energy, collision, and the bin scheme file path.
+                matrix_json+="{\"energy\": \"${energy}\", \"collision\": \"${collision}\", \"binScheme\": \"${file}\"}"
+              done
+            done
+          done
+          matrix_json+="]}"
+          echo "Matrix JSON:"
+          echo "$matrix_json"
+          # Set the output
+          echo "::set-output name=matrix::$matrix_json"
+          
+  run-simulations:
+    needs: generate-matrix
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
+
+      - name: Build project
+        run: |
+          # Assuming you use your eic-shell wrapper for the build.
+          ./eic-shell <<'EOF'
+          make all
+          EOF
+
+      - name: Run simulation for ${{ matrix.energy }} / ${{ matrix.collision }} with ${{ matrix.binScheme }}
+        run: |
+          echo "Running simulation with energy ${{ matrix.energy }}, collision ${{ matrix.collision }}, binScheme ${{ matrix.binScheme }}"
+          ./build/analysis_DIS "${{ matrix.energy }}" 1 100 "${{ matrix.collision }}" "${{ matrix.binScheme }}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-artifacts-${{ matrix.energy }}-${{ matrix.collision }}-$(basename "${{ matrix.binScheme }}")
+          path: artifacts/
