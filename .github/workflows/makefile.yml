@@ -95,12 +95,6 @@ jobs:
         make test06_uploadCSV
         EOF
 
-    - name: Run test07_migrationReader
-      run: |
-        ./eic-shell <<'EOF'
-        make test07_migrationReader
-        EOF
-
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:

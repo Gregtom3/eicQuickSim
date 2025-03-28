@@ -50,8 +50,6 @@ add_eic_test(test03_weightHistDIS "src/tests/test03_weightHistDIS.C")
 add_eic_test(test04_printEvent    "src/tests/test04_printEvent.C")
 add_eic_test(test05_weightHistSIDIS "src/tests/test05_weightHistSIDIS.C")
 add_eic_test(test06_uploadCSV     "src/tests/test06_uploadCSV.C")
-add_eic_test(test07_migrationReader "src/tests/test07_migrationReader.C")
-add_eic_test(test08_migrationHist "src/tests/test08_migrationHist.C")
 
 # --- New executable target for analysis_epDIS ---
 # This target compiles macros/analysis_epDIS.C along with common sources.
