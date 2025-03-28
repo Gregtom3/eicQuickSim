@@ -68,6 +68,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake
 
+      - name: Install dependencies and Apptainer manually
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libseccomp-dev \
+            pkg-config \
+            squashfs-tools \
+            squashfuse \
+            fuse2fs \
+            fuse3 \
+            fuse-overlayfs \
+            cryptsetup \
+            curl \
+            libfuse-dev \
+            git \
+            uuid-dev \
+            cmake
+
+          export VERSION=1.2.5
+          wget https://github.com/apptainer/apptainer/releases/download/v${VERSION}/apptainer_${VERSION}_amd64.deb
+          sudo dpkg -i apptainer_${VERSION}_amd64.deb
+          
       - name: Install eic-shell
         run: |
           curl -L https://github.com/eic/eic-shell/raw/main/install.sh | bash
