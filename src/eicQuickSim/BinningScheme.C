@@ -12,6 +12,9 @@ BinningScheme::BinningScheme(const std::string& yamlFilePath) {
 }
 
 void BinningScheme::parseYAML(const std::string &yamlFilePath) {
+
+    pathToBinScheme = yamlFilePath;
+
     YAML::Node config = YAML::LoadFile(yamlFilePath);
     
     // Get the energy configuration.
@@ -176,4 +179,16 @@ void BinningScheme::saveCSV(const std::string &outFilePath) const {
     }
     
     ofs.close();
+}
+
+std::string BinningScheme::getSchemeName() const {
+    std::regex re(R"(([^/\\]+)\.yaml$)");
+    std::smatch match;
+    std::string binName;
+    if (std::regex_search(pathToBinScheme, match, re)) {
+        binName = match[1].str();
+    } else {
+        binName = pathToBinScheme;
+    }
+    return binName;
 }

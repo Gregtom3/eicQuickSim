@@ -16,6 +16,8 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+
+
 using namespace HepMC3;
 using std::cout;
 using std::endl;
@@ -83,9 +85,11 @@ int main(int argc, char* argv[]) {
         root_input.close();
     }
     
-    // Format the output CSV file name to include the energy configuration, collision type, numFiles, and maxEvents.
-    std::string outputCSV = "artifacts/analysis_DIS_" + energyConfig + "_" + collisionType + "_" 
-                              + std::to_string(numFiles) + "_" + std::to_string(maxEvents) + ".csv";
+    std::string binName = binScheme.getSchemeName();
+
+    // Format the output CSV file name to include energy configuration, collision type, bin scheme name, numFiles, and maxEvents.
+    std::string outputCSV = "artifacts/analysis_DIS_energy=" + energyConfig + "_type=" + collisionType + "_yamlName=" 
+                              + binName + "_numFiles=" + std::to_string(numFiles) + "_maxEvents=" + std::to_string(maxEvents) + ".csv";
     
     try {
         binScheme.saveCSV(outputCSV);
@@ -94,7 +98,6 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error saving CSV: " << ex.what() << endl;
         return 1;
     }
-
 
     return 0;
 }

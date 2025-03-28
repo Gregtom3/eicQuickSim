@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <regex>
 
 class BinningScheme {
 public:
@@ -39,7 +40,10 @@ public:
     // Utility: given a vector of bin indices, return a string key (e.g., "2_5").
     std::string makeBinKey(const std::vector<int>& bins) const;
 
+    std::string getSchemeName() const;
+
 private:
+    std::string pathToBinScheme; // yaml
     std::string energy_config;
     std::vector<Dimension> dimensions;
 
