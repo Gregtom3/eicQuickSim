@@ -95,12 +95,12 @@ public:
     // Q: virtual photon, L: electron beam, p1 and p2: hadron four-vectors.
     // method: 0 for phi_RT, 1 for phi_Rperp.
     static double phi_R(const TLorentzVector& Q, const TLorentzVector& L, 
-                        const TLorentzVector& p1, const TLorentzVector& p2, int method);
+                        const TLorentzVector& p1, const TLorentzVector& p2, const TLorentzVector& init_target, int method);
 
     // New static methods for dihadron pair.
     // Compute the center-of-mass polar angle (com_th) of the pair.
     static double com_th(const TLorentzVector& P1, const TLorentzVector& P2);
-    
+
     // Compute the invariant mass (Mh) of the pair.
     static double invariantMass(const TLorentzVector& P1, const TLorentzVector& P2);
     

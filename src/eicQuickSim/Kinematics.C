@@ -188,8 +188,8 @@ void Kinematics::computeDISIDS(const HepMC3::GenEvent& evt, int pid1, int pid2) 
                 TLorentzVector pair = p1 + p2;
                 dih.z_pair = z(disKin_.q, pair, disKin_.pIn);
                 dih.phi_h = phi(disKin_.q, pair, disKin_.eIn);
-                dih.phi_R_method0 = phi_R(disKin_.q, disKin_.eIn, p1, p2, 0);
-                dih.phi_R_method1 = phi_R(disKin_.q, disKin_.eIn, p1, p2, 1);
+                dih.phi_R_method0 = phi_R(disKin_.q, disKin_.eIn, p1, p2, disKin_.pIn, 0);
+                dih.phi_R_method1 = phi_R(disKin_.q, disKin_.eIn, p1, p2, disKin_.pIn, 1);
                 dih.pT_lab_pair = pT_lab(pair);
                 dih.pT_com_pair = pT_com(disKin_.q, pair, disKin_.pIn);
                 dih.xF_pair = xF(disKin_.q, pair, disKin_.pIn, disKin_.W);
@@ -222,8 +222,8 @@ void Kinematics::computeDISIDS(const HepMC3::GenEvent& evt, int pid1, int pid2) 
                 TLorentzVector pair = p1 + p2;
                 dih.z_pair = z(disKin_.q, pair, disKin_.pIn);
                 dih.phi_h = phi(disKin_.q, pair, disKin_.eIn);
-                dih.phi_R_method0 = phi_R(disKin_.q, disKin_.eIn, p1, p2, 0);
-                dih.phi_R_method1 = phi_R(disKin_.q, disKin_.eIn, p1, p2, 1);
+                dih.phi_R_method0 = phi_R(disKin_.q, disKin_.eIn, p1, p2, disKin_.pIn, 0);
+                dih.phi_R_method1 = phi_R(disKin_.q, disKin_.eIn, p1, p2, disKin_.pIn, 1);
                 dih.pT_lab_pair = pT_lab(pair);
                 dih.pT_com_pair = pT_com(disKin_.q, pair, disKin_.pIn);
                 dih.xF_pair = xF(disKin_.q, pair, disKin_.pIn, disKin_.W);
@@ -239,7 +239,7 @@ void Kinematics::computeDISIDS(const HepMC3::GenEvent& evt, int pid1, int pid2) 
 
 // Static function to calculate phi_R for a dihadron.
 double Kinematics::phi_R(const TLorentzVector& Q, const TLorentzVector& L, 
-                           const TLorentzVector& p1, const TLorentzVector& p2, int method) {
+                           const TLorentzVector& p1, const TLorentzVector& p2, const TLorentzVector& init_target, int method) {
     TLorentzVector ph = p1 + p2;
     TLorentzVector r = 0.5 * (p1 - p2);
 
@@ -255,7 +255,6 @@ double Kinematics::phi_R(const TLorentzVector& Q, const TLorentzVector& L,
         break;
     case 1: { // Using Matevosyan et al. 1707.04999 to obtain R_perp.
         TLorentzVector init_target;
-        init_target.SetPxPyPzE(0, 0, 0, 0.938272);
         double z1 = (init_target * p1) / (init_target * Q);
         double z2 = (init_target * p2) / (init_target * Q);
         TVector3 P1(p1.Px(), p1.Py(), p1.Pz());

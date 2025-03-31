@@ -226,7 +226,7 @@ double Weights::getWeight(double Q2) const {
 }
 
 // Export CSV with weights.
-// For each CSVRow, we compute a weight (using the midpoint of the Q2 interval) and write the row with an appended weight column.
+// For each CSVRow, we compute a weight and write the row with an appended weight column.
 bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::string &outFilePath) const {
     std::ofstream ofs(outFilePath);
     if (!ofs.is_open()) {
@@ -236,9 +236,9 @@ bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::s
     // Write header.
     ofs << "filename,Q2_min,Q2_max,electron_energy,hadron_energy,n_events,cross_section_pb,weight\n";
     for (const auto &row : rows) {
-         // Use the midpoint of the Q2 interval as a representative Q2 value.
-         double midQ2 = (row.q2Min + row.q2Max) / 2.0;
-         double weight = getWeight(midQ2);
+         // Use just a smidgen infront of the Q2min 
+         double theQ2 = row.q2Min + 0.0001;
+         double weight = getWeight(theQ2);
          ofs << row.filename << ","
              << row.q2Min << ","
              << row.q2Max << ","

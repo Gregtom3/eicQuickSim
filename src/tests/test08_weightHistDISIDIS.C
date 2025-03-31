@@ -90,39 +90,39 @@ int main() {
     // --- Step 5: Draw and save the dihadron kinematic histograms ---
     TCanvas* c1 = new TCanvas("c1", "Pi+ Pi- Dihadron z Distribution", 800, 600);
     h_z_pair->Draw("HIST");
-    c1->SaveAs("artifacts/test_dihad_z_pair.png");
+    c1->SaveAs("artifacts/test08_dihad_z_pair.png");
     
     TCanvas* c2 = new TCanvas("c2", "Pi+ Pi- Dihadron #phi_{h} Distribution", 800, 600);
     h_phi_h->Draw("HIST");
-    c2->SaveAs("artifacts/test_dihad_phi_h.png");
+    c2->SaveAs("artifacts/test08_dihad_phi_h.png");
     
     TCanvas* c3 = new TCanvas("c3", "Pi+ Pi- Dihadron #phi_{R} (Method 0) Distribution", 800, 600);
     h_phi_R_method0->Draw("HIST");
-    c3->SaveAs("artifacts/test_dihad_phi_R_method0.png");
+    c3->SaveAs("artifacts/test08_dihad_phi_R_method0.png");
     
     TCanvas* c4 = new TCanvas("c4", "Pi+ Pi- Dihadron #phi_{R} (Method 1) Distribution", 800, 600);
     h_phi_R_method1->Draw("HIST");
-    c4->SaveAs("artifacts/test_dihad_phi_R_method1.png");
+    c4->SaveAs("artifacts/test08_dihad_phi_R_method1.png");
     
     TCanvas* c5 = new TCanvas("c5", "Pi+ Pi- Dihadron p_{T}^{lab} Distribution", 800, 600);
     h_pT_lab_pair->Draw("HIST");
-    c5->SaveAs("artifacts/test_dihad_pT_lab_pair.png");
+    c5->SaveAs("artifacts/test08_dihad_pT_lab_pair.png");
     
     TCanvas* c6 = new TCanvas("c6", "Pi+ Pi- Dihadron p_{T}^{com} Distribution", 800, 600);
     h_pT_com_pair->Draw("HIST");
-    c6->SaveAs("artifacts/test_dihad_pT_com_pair.png");
+    c6->SaveAs("artifacts/test08_dihad_pT_com_pair.png");
     
     TCanvas* c7 = new TCanvas("c7", "Pi+ Pi- Dihadron xF Distribution", 800, 600);
     h_xF_pair->Draw("HIST");
-    c7->SaveAs("artifacts/test_dihad_xF_pair.png");
+    c7->SaveAs("artifacts/test08_dihad_xF_pair.png");
     
     TCanvas* c8 = new TCanvas("c8", "Pi+ Pi- Dihadron COM Polar Angle Distribution", 800, 600);
     h_com_th->Draw("HIST");
-    c8->SaveAs("artifacts/test_dihad_com_th.png");
+    c8->SaveAs("artifacts/test08_dihad_com_th.png");
     
     TCanvas* c9 = new TCanvas("c9", "Pi+ Pi- Dihadron Invariant Mass Distribution", 800, 600);
     h_Mh->Draw("HIST");
-    c9->SaveAs("artifacts/test_dihad_Mh.png");
+    c9->SaveAs("artifacts/test08_dihad_Mh.png");
     
     std::cout << "Saved dihadron kinematic histograms to the artifacts directory." << std::endl;
     return 0;
