@@ -101,6 +101,12 @@ jobs:
         make test07_epNevents
         EOF
 
+    - name: Run test08_weightHistDISIDS
+      run: |
+        ./eic-shell <<'EOF'
+        make test08_weightHistDISIDIS
+        EOF
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:

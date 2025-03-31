@@ -19,7 +19,7 @@ struct disKinematics {
     double W;            // invariant mass of hadronic system
 };
 
-// Structure to hold SIDIS kinematics. For each event there may be multiple SIDIS values.
+// Structure to hold SIDIS kinematics.
 struct sidisKinematics {
     std::vector<double> xF;     // Feynman xF
     std::vector<double> eta;    // pseudorapidity
@@ -29,21 +29,43 @@ struct sidisKinematics {
     std::vector<double> pT_com; // transverse momentum (w.r.t gamma-N COM frame)
 };
 
+// Structure to hold dihadron kinematics for DISIDS.
+struct dihadronKinematics {
+    // Pair-level quantities:
+    double z_pair;
+    double phi_h;
+    double phi_R_method0;
+    double phi_R_method1;
+    double pT_lab_pair;
+    double pT_com_pair;
+    double xF_pair;
+    double com_th; // center-of-mass polar angle of the pair
+    double Mh;     // invariant mass of the pair
+    // Individual hadron quantities:
+    double z1, z2;
+    double pT_lab_1, pT_lab_2;
+    double pT_com_1, pT_com_2;
+    double xF1, xF2;
+};
+
 class Kinematics {
 public:
     Kinematics();
 
     // Compute and store DIS kinematics from a GenEvent.
-    // This fills the internal disKinematics structure.
     void computeDIS(const HepMC3::GenEvent& evt);
 
     // Compute SIDIS kinematics for a given final state particle (identified by pid).
-    // Requires that computeDIS has already been called.
     void computeSIDIS(const HepMC3::GenEvent& evt, int pid);
+
+    // Compute dihadron kinematics for DISIDS.
+    // Requires two PIDs, and forms unique pairs of final state particles.
+    void computeDISIDS(const HepMC3::GenEvent& evt, int pid1, int pid2);
 
     // Getters for the stored kinematics.
     disKinematics getDISKinematics() const;
     sidisKinematics getSIDISKinematics() const;
+    std::vector<dihadronKinematics> getDISIDSKinematics() const;
 
     // Helper functions:
     static TLorentzVector buildFourVector(const std::shared_ptr<const HepMC3::GenParticle>& particle);
@@ -51,31 +73,41 @@ public:
         searchParticle(const HepMC3::GenEvent& evt, int status, int pid);
 
     // Calculate xF for a hadron.
-    // q: virtual photon, h: hadron four-vector, pIn: nucleon target, W: invariant mass.
     static double xF(const TLorentzVector& q, const TLorentzVector& h,
                      const TLorentzVector& pIn, double W);
    
-    // Calculate eta for a hadron
-    // h: hadron four-vector
+    // Calculate eta for a hadron.
     static double eta(const TLorentzVector& h);
 
-    // Calculate z for a hadron
-    // q: virtual photon, h: hadron four-vector, pIn: nucleon target
+    // Calculate z for a hadron.
     static double z(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& pIn);
 
-    // Calculate azimuthal phi for a hadron (gamma-N COM frame)
-    // q: virtual photon, h: hadron four-vector, eIn: electron beam
+    // Calculate azimuthal phi for a hadron (gamma-N COM frame).
     static double phi(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& eIn);
 
-    // Calculate pT for a hadron (lab frame)
+    // Calculate pT for a hadron (lab frame).
     static double pT_lab(const TLorentzVector& h);
 
-    // Calculate pT for a hadron (gamma-N COM frame)
-    // q: virtual photon, h: hadron four-vector, pIn: nucleon target
+    // Calculate pT for a hadron (gamma-N COM frame).
     static double pT_com(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& pIn);
+
+    // Calculate phi_R for a dihadron.
+    // Q: virtual photon, L: electron beam, p1 and p2: hadron four-vectors.
+    // method: 0 for phi_RT, 1 for phi_Rperp.
+    static double phi_R(const TLorentzVector& Q, const TLorentzVector& L, 
+                        const TLorentzVector& p1, const TLorentzVector& p2, int method);
+
+    // New static methods for dihadron pair.
+    // Compute the center-of-mass polar angle (com_th) of the pair.
+    static double com_th(const TLorentzVector& P1, const TLorentzVector& P2);
+    
+    // Compute the invariant mass (Mh) of the pair.
+    static double invariantMass(const TLorentzVector& P1, const TLorentzVector& P2);
+    
 private:
     disKinematics disKin_;
     sidisKinematics sidisKin_;
+    std::vector<dihadronKinematics> dihadKin_;
 };
 
 } // namespace eicQuickSim

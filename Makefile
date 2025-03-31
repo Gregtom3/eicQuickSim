@@ -1,12 +1,12 @@
 .PHONY: install all build run clean tests \
         test00_readData test01_grabFiles test02_dataSummary test03_weightHistDIS \
         test04_printEvent test05_weightHistSIDIS test06_uploadCSV yaml-cpp analysis_DIS \
-		test07_epNevents
+		test07_epNevents test08_weightHistDISIDS
 
 BUILD_DIR = build
 TESTS = test00_readData test01_grabFiles test02_dataSummary test03_weightHistDIS \
         test04_printEvent test05_weightHistSIDIS test06_uploadCSV  \
-		test07_epNevents
+		test07_epNevents test08_weightHistDISIDS
 		
 # Setup: Install Python requirements
 install_requirements:

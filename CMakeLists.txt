@@ -47,6 +47,7 @@ add_eic_test(test04_printEvent    "src/tests/test04_printEvent.C")
 add_eic_test(test05_weightHistSIDIS "src/tests/test05_weightHistSIDIS.C")
 add_eic_test(test06_uploadCSV     "src/tests/test06_uploadCSV.C")
 add_eic_test(test07_epNevents     "src/tests/test07_epNevents.C")
+add_eic_test(test08_weightHistDISIDIS     "src/tests/test08_weightHistDISIDIS.C")
 
 # New function for adding macro executables.
 function(add_eic_executable targetName macroSource)
