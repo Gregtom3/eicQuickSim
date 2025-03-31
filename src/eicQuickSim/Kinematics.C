@@ -79,6 +79,10 @@ double Kinematics::z(const TLorentzVector& q, const TLorentzVector& h, const TLo
     return (pIn * h) / (pIn * q);
 }
 
+double Kinematics::eta(const TLorentzVector& h){
+    return h.PseudoRapidity();
+}
+
 double Kinematics::phi(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& eIn){
     TVector3 q3(q.Px(), q.Py(), q.Pz());
     TVector3 l3(eIn.Px(), eIn.Py(), eIn.Pz());
