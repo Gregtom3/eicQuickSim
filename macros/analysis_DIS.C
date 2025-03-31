@@ -23,10 +23,10 @@ using std::cout;
 using std::endl;
 
 int main(int argc, char* argv[]) {
-    // Updated usage message:
+    // Updated usage message with optional output path:
     if (argc < 6) {
         std::cerr << "Usage: " << argv[0]
-                  << " <energy configuration (e.g., 5x41)> <number of files OR CSV path> <max events> <collision type (ep or en)> <path to bin scheme>"
+                  << " <energy configuration (e.g., 5x41)> <number of files OR CSV path> <max events> <collision type (ep or en)> <path to bin scheme> [output file path]"
                   << std::endl;
         return 1;
     }
@@ -36,6 +36,13 @@ int main(int argc, char* argv[]) {
     int maxEvents = std::stoi(argv[3]);
     std::string collisionType = argv[4];
     std::string pathToBinScheme = argv[5];
+
+    // Check for optional output file path argument.
+    bool outputCSVProvided = (argc >= 7);
+    std::string outputCSV;
+    if (outputCSVProvided) {
+        outputCSV = argv[6];
+    }
 
     std::vector<CSVRow> combinedRows;
     bool isNumeric = true;
@@ -105,19 +112,18 @@ int main(int argc, char* argv[]) {
         root_input.close();
     }
 
-    // Get the bin scheme name.
-    std::string binName = binScheme.getSchemeName();
-
-    // Format the output CSV file name to include energy config, collision type, bin scheme name, max events,
-    // and (if applicable) number of files.
-    std::string outputCSV = "artifacts/analysis_DIS_energy=" + energyConfig +
-                            "_type=" + collisionType +
-                            "_yamlName=" + binName +
-                            "_maxEvents=" + std::to_string(maxEvents);
-    if (isNumeric) {
-        outputCSV += "_numFiles=" + secondArg;
+    // If the output file path was not provided, use the default path.
+    if (!outputCSVProvided) {
+        std::string binName = binScheme.getSchemeName();
+        outputCSV = "artifacts/analysis_DIS_energy=" + energyConfig +
+                    "_type=" + collisionType +
+                    "_yamlName=" + binName +
+                    "_maxEvents=" + std::to_string(maxEvents);
+        if (isNumeric) {
+            outputCSV += "_numFiles=" + secondArg;
+        }
+        outputCSV += ".csv";
     }
-    outputCSV += ".csv";
 
     try {
         binScheme.saveCSV(outputCSV);
