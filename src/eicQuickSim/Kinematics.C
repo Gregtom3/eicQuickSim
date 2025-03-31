@@ -258,7 +258,7 @@ double Kinematics::phi_R(const TLorentzVector& Q, const TLorentzVector& L,
         TVector3 P2(p2.Px(), p2.Py(), p2.Pz());
         TVector3 P1perp = P1 - (q * P1) / (q * q) * q;
         TVector3 P2perp = P2 - (q * P2) / (q * q) * q;
-        Rperp = (z2 * P1perp - z1 * P2perp) / (z1 + z2);
+        Rperp = (z2 * P1perp - z1 * P2perp) * (1/(z1 + z2));
         break;
     }
     default:
