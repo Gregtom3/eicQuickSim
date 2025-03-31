@@ -157,7 +157,7 @@ void Analysis::setDISIDISPids(int pid1, int pid2) {
 
 bool Analysis::checkInputs() const {
     if(m_analysisType.empty() || m_energyConfig.empty() || m_csvSource.empty() ||
-       m_collisionType.empty() || m_binningSchemePath.empty() || m_maxEvents <= 0) {
+       m_collisionType.empty() || m_binningSchemePath.empty()) {
         std::cerr << "Missing required inputs for Analysis." << std::endl;
         return false;
     }

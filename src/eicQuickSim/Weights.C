@@ -222,6 +222,8 @@ double Weights::getWeight(double Q2) const {
     if (idx < 0)
         idx = 0;
     double baseWeight = Q2weights[idx];
+    std::cout << Q2 << " , " << baseWeight << " , " << Q2mins[idx] << " , " << Q2maxs[idx] << " , " << experimentalLumi << " , "  << simulatedLumi << std::endl;
+    std::cout << baseWeight * (experimentalLumi / simulatedLumi) << std::endl;
     return baseWeight * (experimentalLumi / simulatedLumi);
 }
 
