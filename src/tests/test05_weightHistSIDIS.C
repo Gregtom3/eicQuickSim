@@ -105,7 +105,7 @@ int main() {
     h_eta_piMinus->SetFillColorAlpha(kGreen-9, 0.35);
     h_eta_piMinus->SetStats(0);
     
-    // --- Step 4: Process each CSVRow and fill all SIDIS histograms ---
+    // --- Step 4: Process each CSVRow and fill all SIDIS histograms ---    
     for (size_t i = 0; i < combinedRows.size(); ++i) {
         CSVRow row = combinedRows[i];
         std::string fullPath = row.filename;
@@ -124,66 +124,34 @@ int main() {
             if (root_input.failed()) break;
             eventsParsed++;
             
-            // Compute DIS kinematics
+            // Compute DIS kinematics for each event.
             eicQuickSim::Kinematics kin;
             kin.computeDIS(evt);
             eicQuickSim::disKinematics dis = kin.getDISKinematics();
             double eventWeight = q2Weights.getWeight(dis.Q2);
 
-            // Compute SIDIS for π⁺ (pid==211)
+            // Compute SIDIS for π⁺ (pid==211) and loop over all final state hadrons.
             kin.computeSIDIS(evt, 211);
-            eicQuickSim::sidisKinematics sidis_piPlus = kin.getSIDISKinematics();
+            std::vector<eicQuickSim::sidisKinematics> sidis_piPlus = kin.getSIDISKinematics();
+            for(auto& sid : sidis_piPlus) {
+                h_xF_piPlus->Fill(sid.xF, eventWeight);
+                h_z_piPlus->Fill(sid.z, eventWeight);
+                h_phi_piPlus->Fill(sid.phi, eventWeight);
+                h_pT_lab_piPlus->Fill(sid.pT_lab, eventWeight);
+                h_pT_com_piPlus->Fill(sid.pT_com, eventWeight);
+                h_eta_piPlus->Fill(sid.eta, eventWeight);
+            }
             
-            // Compute SIDIS for π⁻ (pid==-211)
+            // Compute SIDIS for π⁻ (pid==-211) and loop over all final state hadrons.
             kin.computeSIDIS(evt, -211);
-            eicQuickSim::sidisKinematics sidis_piMinus = kin.getSIDISKinematics();
-            
-            // Fill xF histograms.
-            for (double xf_val : sidis_piPlus.xF) {
-                h_xF_piPlus->Fill(xf_val, eventWeight);
-            }
-            for (double xf_val : sidis_piMinus.xF) {
-                h_xF_piMinus->Fill(xf_val, eventWeight);
-            }
-            
-            // Fill z histograms.
-            for (double z_val : sidis_piPlus.z) {
-                h_z_piPlus->Fill(z_val, eventWeight);
-            }
-            for (double z_val : sidis_piMinus.z) {
-                h_z_piMinus->Fill(z_val, eventWeight);
-            }
-            
-            // Fill φ (phi) histograms.
-            for (double phi_val : sidis_piPlus.phi) {
-                h_phi_piPlus->Fill(phi_val, eventWeight);
-            }
-            for (double phi_val : sidis_piMinus.phi) {
-                h_phi_piMinus->Fill(phi_val, eventWeight);
-            }
-            
-            // Fill pT_lab histograms.
-            for (double pt_val : sidis_piPlus.pT_lab) {
-                h_pT_lab_piPlus->Fill(pt_val, eventWeight);
-            }
-            for (double pt_val : sidis_piMinus.pT_lab) {
-                h_pT_lab_piMinus->Fill(pt_val, eventWeight);
-            }
-            
-            // Fill pT_com histograms.
-            for (double pt_val : sidis_piPlus.pT_com) {
-                h_pT_com_piPlus->Fill(pt_val, eventWeight);
-            }
-            for (double pt_val : sidis_piMinus.pT_com) {
-                h_pT_com_piMinus->Fill(pt_val, eventWeight);
-            }
-            
-            // Fill η histograms
-            for (double eta_val : sidis_piPlus.eta) {
-                h_eta_piPlus->Fill(eta_val, eventWeight);
-            }
-            for (double eta_val : sidis_piMinus.eta) {
-                h_eta_piMinus->Fill(eta_val, eventWeight);
+            std::vector<eicQuickSim::sidisKinematics> sidis_piMinus = kin.getSIDISKinematics();
+            for(auto& sid : sidis_piMinus) {
+                h_xF_piMinus->Fill(sid.xF, eventWeight);
+                h_z_piMinus->Fill(sid.z, eventWeight);
+                h_phi_piMinus->Fill(sid.phi, eventWeight);
+                h_pT_lab_piMinus->Fill(sid.pT_lab, eventWeight);
+                h_pT_com_piMinus->Fill(sid.pT_com, eventWeight);
+                h_eta_piMinus->Fill(sid.eta, eventWeight);
             }
         }
         root_input.close();

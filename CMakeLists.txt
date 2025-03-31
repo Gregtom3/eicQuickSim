@@ -59,6 +59,8 @@ endfunction()
 
 # Register macro executables using the new function.
 add_eic_executable(analysis_DIS macros/analysis_DIS.C)
+add_eic_executable(analysis_SIDIS macros/analysis_SIDIS.C)
+add_eic_executable(analysis_DISIDIS macros/analysis_DISIDIS.C)
 add_eic_executable(preprocess_HPC macros/preprocess_HPC.C)
 
 enable_testing()
