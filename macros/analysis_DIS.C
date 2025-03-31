@@ -1,6 +1,8 @@
 #include "Analysis.h"
 #include <iostream>
 
+using namespace eicQuickSim;
+
 int main(int argc, char* argv[]) {
     if (argc < 6) {
         std::cerr << "Usage: " << argv[0]
@@ -9,21 +11,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    using namespace eicQuickSim;
-    
     Analysis analysis;
     analysis.setAnalysisType("DIS");
     analysis.setEnergyConfig(argv[1]);
-    analysis.setCSVSource(argv[2]); // either a number of files or a CSV path
+    analysis.setCSVSource(argv[2]);
     analysis.setMaxEvents(std::stoi(argv[3]));
     analysis.setCollisionType(argv[4]);
     analysis.setBinningSchemePath(argv[5]);
-    if (argc >= 7)
+    if(argc >= 7)
         analysis.setOutputCSV(argv[6]);
-    
-    analysis.setDISValueFunction([](const HepMC3::GenEvent& evt, const Kinematics& kin) {
-        return std::vector<double>{ kin.getDISKinematics().Q2, kin.getDISKinematics().x };
-    });
     
     analysis.run();
     analysis.end();

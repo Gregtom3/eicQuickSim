@@ -1,8 +1,100 @@
 #include "Analysis.h"
 #include <iostream>
 #include <cctype>
+#include <algorithm>
 
 namespace eicQuickSim {
+
+//////////////////////////////
+// Helper functions
+//////////////////////////////
+
+std::string Analysis::toLower(const std::string& s) {
+    std::string ret = s;
+    std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+    return ret;
+}
+
+double Analysis::getValueDIS(const disKinematics& dis, const std::string& branch) {
+    std::string b = toLower(branch);
+    if(b == "q2") return dis.Q2;
+    else if(b == "x") return dis.x;
+    else if(b == "w") return dis.W;
+    else return 0.0;
+}
+
+double Analysis::getValueSIDIS(const sidisKinematics& sid, const std::string& branch) {
+    std::string b = toLower(branch);
+    if(b == "q2") return sid.Q2;
+    else if(b == "x") return sid.x;
+    else if(b == "xf") return sid.xF;
+    else if(b == "eta") return sid.eta;
+    else if(b == "z") return sid.z;
+    else if(b == "phi") return sid.phi;
+    else if(b == "pt_lab" || b=="ptlab") return sid.pT_lab;
+    else if(b == "pt_com" || b=="ptcom") return sid.pT_com;
+    else return 0.0;
+}
+
+double Analysis::getValueDihad(const dihadronKinematics& dih, const std::string& branch) {
+    std::string b = toLower(branch);
+    if(b == "q2") return dih.Q2;
+    else if(b == "x") return dih.x;
+    else if(b == "z_pair" || b=="zpair") return dih.z_pair;
+    else if(b == "phi_h" || b=="phih") return dih.phi_h;
+    else if(b == "phi_r_method0" || b=="phir0") return dih.phi_R_method0;
+    else if(b == "phi_r_method1" || b=="phir1") return dih.phi_R_method1;
+    else if(b == "pt_lab_pair" || b=="ptlabpair") return dih.pT_lab_pair;
+    else if(b == "pt_com_pair" || b=="ptcompair") return dih.pT_com_pair;
+    else if(b == "xf_pair" || b=="xfpair") return dih.xF_pair;
+    else if(b == "com_th" || b=="comth") return dih.com_th;
+    else if(b == "mh") return dih.Mh;
+    else return 0.0;
+}
+
+//////////////////////////////
+// Auto-generation of value functions
+//////////////////////////////
+
+// Assume that the BinningScheme class has a method that returns a vector<string>
+// of branch_reco names (one for each dimension).
+// For example: { "Q2", "X" } for DIS.
+void Analysis::autoSetDISValueFunction() {
+    std::vector<std::string> branches = m_binScheme->getReconstructedBranches();
+    m_disValueFunction = [branches](const disKinematics& dis) -> std::vector<double> {
+        std::vector<double> vals;
+        for (const auto& b : branches) {
+            vals.push_back(getValueDIS(dis, b));
+        }
+        return vals;
+    };
+}
+
+void Analysis::autoSetSIDISValueFunction() {
+    std::vector<std::string> branches = m_binScheme->getReconstructedBranches();
+    m_sidisValueFunction = [branches](const sidisKinematics& sid) -> std::vector<double> {
+        std::vector<double> vals;
+        for (const auto& b : branches) {
+            vals.push_back(getValueSIDIS(sid, b));
+        }
+        return vals;
+    };
+}
+
+void Analysis::autoSetDihadValueFunction() {
+    std::vector<std::string> branches = m_binScheme->getReconstructedBranches();
+    m_dihadValueFunction = [branches](const dihadronKinematics& dih) -> std::vector<double> {
+        std::vector<double> vals;
+        for (const auto& b : branches) {
+            vals.push_back(getValueDihad(dih, b));
+        }
+        return vals;
+    };
+}
+
+//////////////////////////////
+// Standard Analysis methods
+//////////////////////////////
 
 Analysis::Analysis() 
     : m_maxEvents(0), m_sidispid(0), m_dihad_pid1(0), m_dihad_pid2(0),
@@ -42,8 +134,16 @@ void Analysis::setOutputCSV(const std::string& outputCSV) {
     m_outputCSV = outputCSV;
 }
 
-void Analysis::setDISValueFunction(std::function<std::vector<double>(const HepMC3::GenEvent&, const Kinematics&)> func) {
+void Analysis::setDISValueFunction(std::function<std::vector<double>(const disKinematics&)> func) {
     m_disValueFunction = func;
+}
+
+void Analysis::setSIDISValueFunction(std::function<std::vector<double>(const sidisKinematics&)> func) {
+    m_sidisValueFunction = func;
+}
+
+void Analysis::setDihadValueFunction(std::function<std::vector<double>(const dihadronKinematics&)> func) {
+    m_dihadValueFunction = func;
 }
 
 void Analysis::setSIDISPid(int pid) {
@@ -53,14 +153,6 @@ void Analysis::setSIDISPid(int pid) {
 void Analysis::setDISIDISPids(int pid1, int pid2) {
     m_dihad_pid1 = pid1;
     m_dihad_pid2 = pid2;
-}
-
-void Analysis::setSIDISValueFunction(std::function<std::vector<double>(const sidisKinematics&)> func) {
-    m_sidisValueFunction = func;
-}
-
-void Analysis::setDihadValueFunction(std::function<std::vector<double>(const dihadronKinematics&)> func) {
-    m_dihadValueFunction = func;
 }
 
 bool Analysis::checkInputs() const {
@@ -73,9 +165,15 @@ bool Analysis::checkInputs() const {
         std::cerr << "Unsupported analysis type: " << m_analysisType << std::endl;
         return false;
     }
-    if(m_analysisType == "SIDIS" && m_sidispid == 0) {
-        std::cerr << "For SIDIS, a valid particle id must be provided." << std::endl;
-        return false;
+    if(m_analysisType == "SIDIS") {
+        if(m_sidispid == 0) {
+            std::cerr << "For SIDIS, a valid particle id must be provided." << std::endl;
+            return false;
+        }
+        if(!m_sidisValueFunction) {
+            std::cerr << "For SIDIS, a SIDIS value function must be provided or auto-generated." << std::endl;
+            return false;
+        }
     }
     if(m_analysisType == "DISIDIS") {
         if(m_dihad_pid1 == 0 || m_dihad_pid2 == 0) {
@@ -83,16 +181,12 @@ bool Analysis::checkInputs() const {
             return false;
         }
         if(!m_dihadValueFunction) {
-            std::cerr << "For DISIDIS, a dihadron value function must be provided." << std::endl;
+            std::cerr << "For DISIDIS, a dihadron value function must be provided or auto-generated." << std::endl;
             return false;
         }
     }
-    if((m_analysisType == "DIS") && !m_disValueFunction) {
-        std::cerr << "For DIS, a DIS value function must be defined." << std::endl;
-        return false;
-    }
-    if(m_analysisType == "SIDIS" && !m_sidisValueFunction) {
-        std::cerr << "For SIDIS, a SIDIS value function must be provided." << std::endl;
+    if(m_analysisType == "DIS" && !m_disValueFunction) {
+        std::cerr << "For DIS, a DIS value function must be defined or auto-generated." << std::endl;
         return false;
     }
     return true;
@@ -128,6 +222,17 @@ void Analysis::run() {
     if(m_binScheme) delete m_binScheme;
     m_binScheme = new BinningScheme(m_binningSchemePath);
     std::cout << "Loaded binning scheme for energy config: " << m_binScheme->getEnergyConfig() << "\n";
+
+    // Automatically generate a value function if one has not been set.
+    if(m_analysisType == "DIS" && !m_disValueFunction) {
+        autoSetDISValueFunction();
+    }
+    if(m_analysisType == "SIDIS" && !m_sidisValueFunction) {
+        autoSetSIDISValueFunction();
+    }
+    if(m_analysisType == "DISIDIS" && !m_dihadValueFunction) {
+        autoSetDihadValueFunction();
+    }
     
     // Process each CSV row (each representing a ROOT file).
     for(size_t i = 0; i < m_combinedRows.size(); ++i) {
@@ -150,18 +255,17 @@ void Analysis::run() {
             
             Kinematics kin;
             double eventWeight = 0.0;
-            kin.computeDIS(evt);
             if(m_analysisType == "DIS") {
+                kin.computeDIS(evt);
                 disKinematics dis = kin.getDISKinematics();
                 eventWeight = m_q2Weights->getWeight(dis.Q2);
-                std::vector<double> values = m_disValueFunction(evt, kin);
+                std::vector<double> values = m_disValueFunction(dis);
                 m_binScheme->addEvent(values, eventWeight);
             }
             else if(m_analysisType == "SIDIS") {
                 kin.computeSIDIS(evt, m_sidispid);
                 disKinematics dis = kin.getDISKinematics();
                 eventWeight = m_q2Weights->getWeight(dis.Q2);
-                // Loop over all SIDIS final-state hadrons.
                 std::vector<sidisKinematics> sidis = kin.getSIDISKinematics();
                 for(auto& sid : sidis) {
                     std::vector<double> values = m_sidisValueFunction(sid);

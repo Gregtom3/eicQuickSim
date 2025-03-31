@@ -30,16 +30,11 @@ public:
     void setBinningSchemePath(const std::string& pathToBinScheme);
     void setOutputCSV(const std::string& outputCSV);
     
-    // For DIS:
-    void setDISValueFunction(std::function<std::vector<double>(const HepMC3::GenEvent&, const Kinematics&)> func);
-
-    // For SIDIS: specify the particle id.
-    void setSIDISPid(int pid);
+    // For DIS: set a custom value function that extracts a vector<double> from disKinematics.
+    void setDISValueFunction(std::function<std::vector<double>(const disKinematics&)> func);
+    // For SIDIS: set a custom value function that extracts a vector<double> from sidisKinematics.
     void setSIDISValueFunction(std::function<std::vector<double>(const sidisKinematics&)> func);
-
-    // For DISIDIS: specify two particle ids.
-    void setDISIDISPids(int pid1, int pid2);
-    // And set a function to extract values from a dihadronKinematics struct.
+    // For DISIDIS: set a custom value function that extracts a vector<double> from dihadronKinematics.
     void setDihadValueFunction(std::function<std::vector<double>(const dihadronKinematics&)> func);
 
     // Run the analysis (process events) and then call end() to save the CSV.
@@ -58,11 +53,14 @@ private:
 
     // For SIDIS.
     int m_sidispid;
-    std::function<std::vector<double>(const sidisKinematics&)> m_sidisValueFunction;
 
     // For DISIDIS.
     int m_dihad_pid1;
     int m_dihad_pid2;
+
+    // User-defined value functions.
+    std::function<std::vector<double>(const disKinematics&)> m_disValueFunction;
+    std::function<std::vector<double>(const sidisKinematics&)> m_sidisValueFunction;
     std::function<std::vector<double>(const dihadronKinematics&)> m_dihadValueFunction;
 
     // Data members.
@@ -70,12 +68,21 @@ private:
     Weights* m_q2Weights;
     BinningScheme* m_binScheme;
 
-    // For DIS
-    std::function<std::vector<double>(const HepMC3::GenEvent&, const Kinematics&)> m_disValueFunction;
-
     // Internal functions.
     bool checkInputs() const;
     void loadCSVRows();
+
+    // --- Helper functions for auto-generating value functions ---
+    // These functions map a branch name (from the YAML) to a value from the struct.
+    static std::string toLower(const std::string& s);
+    static double getValueDIS(const disKinematics& dis, const std::string& branch);
+    static double getValueSIDIS(const sidisKinematics& sid, const std::string& branch);
+    static double getValueDihad(const dihadronKinematics& dih, const std::string& branch);
+
+    // Auto-generate a DIS value function based on the bin scheme.
+    void autoSetDISValueFunction();
+    void autoSetSIDISValueFunction();
+    void autoSetDihadValueFunction();
 };
 
 } // namespace eicQuickSim
