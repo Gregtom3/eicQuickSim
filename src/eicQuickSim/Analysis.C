@@ -170,24 +170,12 @@ bool Analysis::checkInputs() const {
             std::cerr << "For SIDIS, a valid particle id must be provided." << std::endl;
             return false;
         }
-        if(!m_sidisValueFunction) {
-            std::cerr << "For SIDIS, a SIDIS value function must be provided or auto-generated." << std::endl;
-            return false;
-        }
     }
     if(m_analysisType == "DISIDIS") {
         if(m_dihad_pid1 == 0 || m_dihad_pid2 == 0) {
             std::cerr << "For DISIDIS, two valid particle ids must be provided." << std::endl;
             return false;
         }
-        if(!m_dihadValueFunction) {
-            std::cerr << "For DISIDIS, a dihadron value function must be provided or auto-generated." << std::endl;
-            return false;
-        }
-    }
-    if(m_analysisType == "DIS" && !m_disValueFunction) {
-        std::cerr << "For DIS, a DIS value function must be defined or auto-generated." << std::endl;
-        return false;
     }
     return true;
 }
@@ -255,8 +243,8 @@ void Analysis::run() {
             
             Kinematics kin;
             double eventWeight = 0.0;
+            kin.computeDIS(evt); // Compute DIS first
             if(m_analysisType == "DIS") {
-                kin.computeDIS(evt);
                 disKinematics dis = kin.getDISKinematics();
                 eventWeight = m_q2Weights->getWeight(dis.Q2);
                 std::vector<double> values = m_disValueFunction(dis);

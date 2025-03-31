@@ -42,6 +42,8 @@ public:
 
     std::string getSchemeName() const;
 
+    std::vector<std::string> getReconstructedBranches() const;
+    
 private:
     std::string pathToBinScheme; // yaml
     std::string energy_config;

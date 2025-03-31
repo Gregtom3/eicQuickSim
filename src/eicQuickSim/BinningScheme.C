@@ -192,3 +192,11 @@ std::string BinningScheme::getSchemeName() const {
     }
     return binName;
 }
+
+std::vector<std::string> BinningScheme::getReconstructedBranches() const {
+    std::vector<std::string> branches;
+    for (const auto& dim : dimensions) {
+        branches.push_back(dim.branch_reco);
+    }
+    return branches;
+}

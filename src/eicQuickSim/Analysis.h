@@ -29,7 +29,9 @@ public:
     void setCollisionType(const std::string& collisionType);
     void setBinningSchemePath(const std::string& pathToBinScheme);
     void setOutputCSV(const std::string& outputCSV);
-    
+    void setSIDISPid(int pid);
+    void setDISIDISPids(int pid1, int pid2);
+
     // For DIS: set a custom value function that extracts a vector<double> from disKinematics.
     void setDISValueFunction(std::function<std::vector<double>(const disKinematics&)> func);
     // For SIDIS: set a custom value function that extracts a vector<double> from sidisKinematics.
