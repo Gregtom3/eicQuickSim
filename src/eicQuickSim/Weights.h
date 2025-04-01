@@ -36,8 +36,8 @@ private:
     std::vector<double> providedWeights;
     
     // For luminosity scaling.
-    double experimentalLumi = 0.0;
-    double simulatedLumi = 0.0;
+    double experimentalLumi = 1.0;
+    double simulatedLumi = 1.0;
     long long totalEvents = 0;
     int energy_e = 0, energy_h = 0; // common electron and hadron energies (must be the same for all CSVRows)
 

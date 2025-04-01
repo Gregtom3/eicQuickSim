@@ -202,10 +202,10 @@ void Analysis::run() {
     }
     loadCSVRows();
     m_q2Weights = new Weights(m_combinedRows);
-    if(m_collisionType == "ep")
-        m_q2Weights->loadExperimentalLuminosity("src/eicQuickSim/ep_lumi.csv");
-    else
-        m_q2Weights->loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    // if(m_collisionType == "ep")
+    //     m_q2Weights->loadExperimentalLuminosity("src/eicQuickSim/ep_lumi.csv");
+    // else
+    //     m_q2Weights->loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
     
     if(m_binScheme) delete m_binScheme;
     m_binScheme = new BinningScheme(m_binningSchemePath);

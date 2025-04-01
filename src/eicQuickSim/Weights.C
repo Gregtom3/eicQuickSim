@@ -209,10 +209,6 @@ void Weights::loadExperimentalLuminosity(const std::string& lumiCSVFilename) {
 
 // Returns the Q2 weight for a given Q2 value, multiplied by (experimentalLumi/simulatedLumi).
 double Weights::getWeight(double Q2) const {
-    if (simulatedLumi == 0.0)
-        throw std::runtime_error("Error: simulatedLuminosity is zero.");
-    if (experimentalLumi == 0.0)
-        throw std::runtime_error("Error: experimentalLumi has not been loaded.");
     int idx = -1;
     for (size_t i = 0; i < Q2mins.size(); i++) {
         if (inQ2Range(Q2, Q2mins[i], Q2maxs[i], false)) {
@@ -238,7 +234,7 @@ bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::s
     for (const auto &row : rows) {
          // Use just a smidgen infront of the Q2min 
          double theQ2 = row.q2Min + 0.0001;
-         double weight = getWeight(theQ2) * (simulatedLumi/experimentalLumi);
+         double weight = getWeight(theQ2)
          ofs << row.filename << ","
              << row.q2Min << ","
              << row.q2Max << ","
