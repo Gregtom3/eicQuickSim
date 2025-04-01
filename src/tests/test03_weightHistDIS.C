@@ -20,14 +20,14 @@ int main() {
     FileManager fm("src/eicQuickSim/en_files.csv");
     
     std::cout << "Loading CSV data for Q2 ranges: 1-10, 10-100, and 100-1000 for 5x41.\n";
-    const int MAX_EVENTS = 10000;
-    auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, 3, MAX_EVENTS);
-    auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, 3, MAX_EVENTS);
-    auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, 3, MAX_EVENTS);
-    // const int MAX_EVENTS = 100000000;
-    // auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, 1000, MAX_EVENTS);
-    // auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, 1000, MAX_EVENTS);
-    // auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, 1000, MAX_EVENTS);
+    // const int MAX_EVENTS = 10000;
+    // auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, 3, MAX_EVENTS);
+    // auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, 3, MAX_EVENTS);
+    // auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, 3, MAX_EVENTS);
+    const int MAX_EVENTS = 100000000;
+    auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, 1000, MAX_EVENTS);
+    auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, 1000, MAX_EVENTS);
+    auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, 1000, MAX_EVENTS);
     
     // Combine all rows into one vector.
     std::vector<std::vector<CSVRow>> groups = { rows_1_10, rows_10_100, rows_100_1000};
@@ -38,6 +38,9 @@ int main() {
     Weights q2Weights(combinedRows);
     // Load in experimental luminosity to scale weights
     q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    std::cout << "Q2=1.01 --> " << q2Weights.getWeight(1.01) << std::endl;
+    std::cout << "Q2=10.01 --> " << q2Weights.getWeight(10.01) << std::endl;
+    std::cout << "Q2=100.01 --> " << q2Weights.getWeight(100.01) << std::endl;
 
     // Step 3: Create global histograms.
     // Q2 histogram: logarithmic bins (Q2 range from 0.1 to 1000 GeV^2).
@@ -101,9 +104,7 @@ int main() {
         root_input.close();
     }
     
-    std::cout << "Q2=1.01 --> " << q2Weights.getWeight(1.01) << std::endl;
-    std::cout << "Q2=10.01 --> " << q2Weights.getWeight(10.01) << std::endl;
-    std::cout << "Q2=100.01 --> " << q2Weights.getWeight(100.01) << std::endl;
+
 
     // Step 5: Save the histograms.
     // Q2 histogram: log-scale canvas.
