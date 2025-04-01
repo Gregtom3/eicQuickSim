@@ -51,7 +51,7 @@ void Kinematics::computeDIS(const HepMC3::GenEvent& evt) {
     disKin_.pIn  = buildFourVector(initHadrons[0]);
     disKin_.q    = disKin_.eIn - disKin_.eOut;
     disKin_.Q2   = -disKin_.q.M2();
-    double denominator = 2 * (disKin_.pIn.E() * disKin_.q.E() - disKin_.pIn.Pz() * disKin_.q.Pz());
+    double denominator = (2 * disKin_.q * disKin_.pIn);
     disKin_.x = (denominator != 0.0) ? disKin_.Q2 / denominator : 0.0;
     double W2 = (disKin_.pIn + disKin_.q).M2();
     disKin_.W = (W2 > 0.0) ? std::sqrt(W2) : 0.0;

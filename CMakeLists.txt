@@ -41,7 +41,7 @@ endfunction()
 
 # ---------------------------------------------------------------------
 # Register tests
-add_eic_test_minimal(test00_readData "src/tests/test00_readData.C")
+add_eic_test_minimal(test00_readData "src/tests/test00_readData.C" ${EIC_Kinematics})
 add_eic_test_minimal(test01_grabFiles "src/tests/test01_grabFiles.C" ${EIC_FileManager})
 add_eic_test_minimal(test02_dataSummary "src/tests/test02_dataSummary.C" ${EIC_FileManager} ${EIC_Weights})
 add_eic_test_minimal(test03_weightHistDIS "src/tests/test03_weightHistDIS.C" ${EIC_FileManager} ${EIC_Weights} ${EIC_Kinematics})
