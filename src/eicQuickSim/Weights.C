@@ -117,6 +117,7 @@ void Weights::calculateWeights() {
     totalEvents = totalEntriesLocal;
     double lumiTotal = static_cast<double>(totalEntriesLocal) / totalCrossSection;
     simulatedLumi = lumiTotal; // simulatedLuminosity = totalEvents/totalCrossSection
+    if(experimentalLumi == 1.0){simulatedLumi = 1.0;} // default to no scaled simulated lumi if exp not provided
     Q2weights.resize(Q2xsecs.size(), 0.0);
     
     for (size_t i = 0; i < Q2xsecs.size(); i++) {
