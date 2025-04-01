@@ -238,7 +238,7 @@ bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::s
     for (const auto &row : rows) {
          // Use just a smidgen infront of the Q2min 
          double theQ2 = row.q2Min + 0.0001;
-         double weight = getWeight(theQ2);
+         double weight = getWeight(theQ2) * (simulatedLumi/experimentalLumi);
          ofs << row.filename << ","
              << row.q2Min << ","
              << row.q2Max << ","

@@ -24,6 +24,10 @@ int main() {
     auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, 3, MAX_EVENTS);
     auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, 3, MAX_EVENTS);
     auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, 3, MAX_EVENTS);
+    // const int MAX_EVENTS = 100000000;
+    // auto rows_1_10    = fm.getCSVData(5, 41, 1, 10, 1000, MAX_EVENTS);
+    // auto rows_10_100  = fm.getCSVData(5, 41, 10, 100, 1000, MAX_EVENTS);
+    // auto rows_100_1000 = fm.getCSVData(5, 41, 100, 1000, 1000, MAX_EVENTS);
     
     // Combine all rows into one vector.
     std::vector<std::vector<CSVRow>> groups = { rows_1_10, rows_10_100, rows_100_1000};
@@ -90,11 +94,17 @@ int main() {
             double eventWeight = q2Weights.getWeight(dis.Q2);
             if (dis.Q2 > 0) {
                 hQ2->Fill(dis.Q2, eventWeight);
+                hX->Fill(dis.x, eventWeight);
+                hW->Fill(dis.W, eventWeight);
             }
         }
         root_input.close();
     }
     
+    std::cout << "Q2=1.01 --> " << q2Weights.getWeight(1.01) << std::endl;
+    std::cout << "Q2=10.01 --> " << q2Weights.getWeight(10.01) << std::endl;
+    std::cout << "Q2=100.01 --> " << q2Weights.getWeight(100.01) << std::endl;
+
     // Step 5: Save the histograms.
     // Q2 histogram: log-scale canvas.
     TCanvas *c1 = new TCanvas("c1", "Q^{2} Distribution", 800, 600);
