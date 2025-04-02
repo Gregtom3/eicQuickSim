@@ -1,0 +1,4 @@
+filename,Q2_min,Q2_max,electron_energy,hadron_energy,n_events,cross_section_pb,weight
+root://dtn-eic.jlab.org//volatile/eic/EPIC/EVGEN/DIS/NC/5x41/minQ2=1/pythia8NCDIS_5x41_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1.hepmc3.tree.root,1,100000,5,41,1000000,400120,1143.2
+root://dtn-eic.jlab.org//volatile/eic/EPIC/EVGEN/DIS/NC/5x41/minQ2=10/pythia8NCDIS_5x41_minQ2=10_beamEffects_xAngle=-0.025_hiDiv_1.hepmc3.tree.root,10,100000,5,41,1000000,20365,55.3676
+root://dtn-eic.jlab.org//volatile/eic/EPIC/EVGEN/DIS/NC/5x41/minQ2=100/pythia8NCDIS_5x41_minQ2=100_beamEffects_xAngle=-0.025_hiDiv_1.hepmc3.tree.root,100,100000,5,41,1000000,287.28,0.808809

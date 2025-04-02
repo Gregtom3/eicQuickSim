@@ -24,6 +24,9 @@ public:
     // The output CSV will have the same columns as the input plus a final column for weight.
     bool exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::string &outFilePath) const;
 
+    void clearUserProvidedWeights();
+    void updateUserProvidedWeight(double userQ2min, double userQ2max, double userWeight);
+    
 private:
     // Unique vectors for Q2 ranges, event counts, and cross sections.
     std::vector<double> Q2mins;
@@ -34,6 +37,7 @@ private:
     double totalCrossSection; // determined from the Q2 ranges
 
     std::vector<double> providedWeights;
+    bool weightsWereProvided = false;
     
     // For luminosity scaling.
     double experimentalLumi = 1.0;

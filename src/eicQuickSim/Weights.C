@@ -75,6 +75,32 @@ void Weights::calculateEntriesAndXsecs(const std::vector<CSVRow>& rows) {
     }
 }
 
+void Weights::clearUserProvidedWeights() {
+    std::fill(providedWeights.begin(), providedWeights.end(), -1.0);
+    weightsWereProvided = false;
+    std::cout << "All user provided weights have been cleared." << std::endl;
+}
+
+void Weights::updateUserProvidedWeight(double userQ2min, double userQ2max, double userWeight) {
+    bool found = false;
+    for (size_t i = 0; i < Q2mins.size(); i++) {
+        if (Q2mins[i] == userQ2min && Q2maxs[i] == userQ2max) {
+            providedWeights[i] = userWeight;
+            found = true;
+            std::cout << "User provided weight " << userWeight
+                      << " for Q2 range > " << userQ2min
+                      << " && < " << userQ2max << std::endl;
+            break;
+        }
+    }
+    if (!found) {
+        throw std::runtime_error("Error: Specified Q2 range (" +
+                                 std::to_string(userQ2min) + ", " +
+                                 std::to_string(userQ2max) + ") not found.");
+    }
+    weightsWereProvided = true;
+}
+
 // Determine the total cross section based on two cases.
 // Case A: If the first unique range fully contains all others, use its cross section.
 // Case B: If the unique ranges "link" (adjacent ranges are continuous), sum all cross sections.
@@ -117,7 +143,6 @@ void Weights::calculateWeights() {
     totalEvents = totalEntriesLocal;
     double lumiTotal = static_cast<double>(totalEntriesLocal) / totalCrossSection;
     simulatedLumi = lumiTotal; // simulatedLuminosity = totalEvents/totalCrossSection
-    if(experimentalLumi == 1.0){simulatedLumi = 1.0;} // default to no scaled simulated lumi if exp not provided
     Q2weights.resize(Q2xsecs.size(), 0.0);
     
     for (size_t i = 0; i < Q2xsecs.size(); i++) {
@@ -219,7 +244,12 @@ double Weights::getWeight(double Q2) const {
     if (idx < 0)
         idx = 0;
     double baseWeight = Q2weights[idx];
-    return baseWeight * (experimentalLumi / simulatedLumi);
+    if(weightsWereProvided==true){
+        return baseWeight;
+    }
+    else{
+        return baseWeight * (experimentalLumi / simulatedLumi);
+    }
 }
 
 // Export CSV with weights.

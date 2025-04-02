@@ -202,10 +202,51 @@ void Analysis::run() {
     }
     loadCSVRows();
     m_q2Weights = new Weights(m_combinedRows);
-    // if(m_collisionType == "ep")
-    //     m_q2Weights->loadExperimentalLuminosity("src/eicQuickSim/ep_lumi.csv");
-    // else
-    //     m_q2Weights->loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    // Set user-provided weights based on energy configuration and collision type.
+    // For "en" collisions:
+    if (m_collisionType == "en") {
+        if (m_energyConfig == "10x100") {
+            m_q2Weights->clearUserProvidedWeights();
+            m_q2Weights->updateUserProvidedWeight(1.0, 10.0, 80691.9);
+            m_q2Weights->updateUserProvidedWeight(10.0, 100.0, 11205.3);
+            m_q2Weights->updateUserProvidedWeight(100.0, 1000.0, 1158.03);
+            m_q2Weights->updateUserProvidedWeight(1000.0, 100000.0, 5.87564);
+        }
+        else if (m_energyConfig == "18x275") {
+            m_q2Weights->clearUserProvidedWeights();
+            m_q2Weights->updateUserProvidedWeight(1.0, 10.0, 21787.6);
+            m_q2Weights->updateUserProvidedWeight(10.0, 100.0, 1849.9);
+            m_q2Weights->updateUserProvidedWeight(100.0, 1000.0, 298.311);
+            m_q2Weights->updateUserProvidedWeight(1000.0, 100000.0, 9.23381);
+        }
+        else if (m_energyConfig == "5x41") {
+            m_q2Weights->clearUserProvidedWeights();
+            m_q2Weights->updateUserProvidedWeight(1.0, 10.0, 4407.28);
+            m_q2Weights->updateUserProvidedWeight(10.0, 100.0, 449.264);
+            m_q2Weights->updateUserProvidedWeight(100.0, 1000.0, 15.8604);
+        }
+    }
+    // For "ep" collisions:
+    else if (m_collisionType == "ep") {
+        if (m_energyConfig == "10x100") {
+            m_q2Weights->clearUserProvidedWeights();
+            m_q2Weights->updateUserProvidedWeight(1.0, 100000.0, 205195.0);
+            m_q2Weights->updateUserProvidedWeight(10.0, 100000.0, 13787.7);
+            m_q2Weights->updateUserProvidedWeight(100.0, 100000.0, 478.725);
+        }
+        else if (m_energyConfig == "18x275") {
+            m_q2Weights->clearUserProvidedWeights();
+            m_q2Weights->updateUserProvidedWeight(1.0, 100000.0, 40000.0);
+            m_q2Weights->updateUserProvidedWeight(10.0, 100000.0, 3417.0);
+            m_q2Weights->updateUserProvidedWeight(100.0, 100000.0, 172.582);
+        }
+        else if (m_energyConfig == "5x41") {
+            m_q2Weights->clearUserProvidedWeights();
+            m_q2Weights->updateUserProvidedWeight(1.0, 100000.0, 8571.42);
+            m_q2Weights->updateUserProvidedWeight(10.0, 100000.0, 415.132);
+            m_q2Weights->updateUserProvidedWeight(100.0, 100000.0, 6.06425);
+        }
+    }
     std::cout << "Q2=1.01 --> " << m_q2Weights->getWeight(1.01) << std::endl;
     std::cout << "Q2=10.01 --> " << m_q2Weights->getWeight(10.01) << std::endl;
     std::cout << "Q2=100.01 --> " << m_q2Weights->getWeight(100.01) << std::endl;
