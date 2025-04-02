@@ -150,7 +150,8 @@ int main() {
     c2->SetLogx();
     c2->SetLogy();
     hX->Draw("HIST");
-    c2->RedrawAxis();"src/eicQuickSim/en_lumi.csv"st.png");
+    c2->RedrawAxis();
+    c2->SaveAs("artifacts/test03_xhist.png");
     
     // W histogram: linear-scale canvas.
     TCanvas *c3 = new TCanvas("c3", "W Distribution", 800, 600);
