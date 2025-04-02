@@ -139,7 +139,7 @@ void Weights::calculateWeights() {
     simulatedLumi = lumiTotal; // simulatedLuminosity = totalEvents/totalCrossSection
     Q2weights.resize(Q2xsecs.size(), 0.0);
     
-    for (size_t i = 0; i < Q2xsecs.size(); i++) {
+    for (size_t i = 0; i < Q2mins.size(); i++) {
         // If a user-specified weight was provided for this Q2 bracket, use it directly.
         if (i < providedWeights.size() && providedWeights[i] >= 0) {
             Q2weights[i] = providedWeights[i];
