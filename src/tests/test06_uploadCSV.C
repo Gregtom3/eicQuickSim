@@ -16,9 +16,7 @@ int main() {
     std::vector<CSVRow> rows = FileManager::combineCSV(groups);
 
     // Step 3: Get Q2 weights
-    Weights q2Weights(rows);
-    // Load in experimental luminosity to scale weights
-    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    Weights q2Weights(rows, WeightInitMethod::LUMI_CSV, "src/eicQuickSim/en_lumi.csv");
 
     
     std::cout << "Q2=1.01 --> " << q2Weights.getWeight(1.01) << std::endl;
@@ -31,10 +29,5 @@ int main() {
         std::cerr << "Failed to export CSV with weights." << std::endl;
         return 1;
     }
-
-    // Step 4: Re-load the CSV with weights and print out the weights
-    FileManager fm_saved(outputPath);
-    auto rows_saved = fm_saved.getAllCSVData(-1,-1);
-    Weights q2Weights_saved(rows_saved);
     return 0;
 }

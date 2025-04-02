@@ -6,7 +6,7 @@
 BUILD_DIR = build
 TESTS = test00_readData test01_grabFiles test02_dataSummary test03_weightHistDIS \
         test04_printEvent test05_weightHistSIDIS test06_uploadCSV  \
-		test07_epNevents test08_weightHistDISIDIS
+		test07_epNevents test08_weightHistDISIDIS test03_1_weightHistDIS
 		
 # Setup: Install Python requirements
 install_requirements:

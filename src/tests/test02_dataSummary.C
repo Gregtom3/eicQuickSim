@@ -15,9 +15,7 @@ int main() {
     std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
     // Step 2: Get Q2 weights
-    Weights q2Weights(combinedRows);
-    // Load in experimental luminosity to scale weights
-    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    Weights q2Weights(combinedRows, WeightInitMethod::LUMI_CSV, "src/eicQuickSim/en_lumi.csv");
 
     
     return 0;

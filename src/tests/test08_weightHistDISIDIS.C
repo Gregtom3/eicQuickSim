@@ -28,8 +28,7 @@ int main() {
     std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
     // --- Step 2: Setup Q2 weights ---
-    Weights q2Weights(combinedRows);
-    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    Weights q2Weights(combinedRows, WeightInitMethod::LUMI_CSV, "src/eicQuickSim/en_lumi.csv");
     
     // --- Step 3: Create histograms for dihadron (π⁺π⁻) kinematics ---
     TH1D* h_z_pair         = new TH1D("h_z_pair", "Pair z Distribution; z_{pair}; Weighted Count", 100, 0.0, 1.0);

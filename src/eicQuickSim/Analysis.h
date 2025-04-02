@@ -25,6 +25,7 @@ public:
     void setAnalysisType(const std::string& analysisType);
     void setEnergyConfig(const std::string& energyConfig);
     void setCSVSource(const std::string& csvSource); // number of files or CSV path.
+    void setCSVWeights(const std::string& csvWeights); // CSV containing Q2 weights
     void setMaxEvents(int maxEvents);
     void setCollisionType(const std::string& collisionType);
     void setBinningSchemePath(const std::string& pathToBinScheme);
@@ -47,11 +48,12 @@ private:
     // Input parameters.
     std::string m_analysisType;  // "DIS", "SIDIS", or "DISIDIS"
     std::string m_energyConfig;
-    std::string m_csvSource;
+    std::string m_csvSource; 
     int m_maxEvents;
     std::string m_collisionType;
     std::string m_binningSchemePath;
     std::string m_outputCSV;
+    std::string m_weightsPath;
 
     // For SIDIS.
     int m_sidispid;

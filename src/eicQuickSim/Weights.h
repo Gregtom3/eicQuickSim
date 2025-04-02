@@ -7,52 +7,58 @@
 
 #include "FileManager.h"
 
+// Initialization method for the weights.
+enum class WeightInitMethod { LUMI_CSV, DEFAULT, PRECALCULATED };
+
 class Weights {
 public:
-    // Constructor: receives the CSV row data.
-    Weights(const std::vector<CSVRow>& combinedRows);
-
-    // Public function to load experimental luminosity from a CSV file.
-    // The CSV file is expected to have a header and three columns:
-    // electron_energy,hadron_energy,expected_lumi
-    void loadExperimentalLuminosity(const std::string& lumiCSVFilename);
-
+    // Constructor.
+    // For modes LUMI_CSV and DEFAULT, combinedRows must be provided.
+    // For mode PRECALCULATED, combinedRows can be empty and csvFilename is used to load the precalculated weights.
+    Weights(const std::vector<CSVRow>& combinedRows, WeightInitMethod initMethod, const std::string &csvFilename = "");
+    
     // Returns the weight for a given Q2 value.
     double getWeight(double Q2) const;
-
-    // Export CSV with the computed weight appended to each row.
-    // The output CSV will have the same columns as the input plus a final column for weight.
+    
+    // Exports a CSV file with an appended weight column.
     bool exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::string &outFilePath) const;
 
-    void clearUserProvidedWeights();
-    void updateUserProvidedWeight(double userQ2min, double userQ2max, double userWeight);
-    
 private:
-    // Unique vectors for Q2 ranges, event counts, and cross sections.
+    // Energy and configuration.
+    int energy_e = 0;
+    int energy_h = 0;
+    
+    // Q2 ranges and related data.
     std::vector<double> Q2mins;
     std::vector<double> Q2maxs;
-    std::vector<long long> Q2entries;
+    std::vector<int> Q2entries;
     std::vector<double> Q2xsecs;
     std::vector<double> Q2weights;
-    double totalCrossSection; // determined from the Q2 ranges
-
     std::vector<double> providedWeights;
-    bool weightsWereProvided = false;
     
-    // For luminosity scaling.
-    double experimentalLumi = 1.0;
-    double simulatedLumi = 1.0;
+    // Total cross section, total events, simulated luminosity, and experimental luminosity.
+    double totalCrossSection = 0.0;
     long long totalEvents = 0;
-    int energy_e = 0, energy_h = 0; // common electron and hadron energies (must be the same for all CSVRows)
+    double simulatedLumi = 0.0;
+    double experimentalLumi = 0.0;
+    
+    // Flag indicating if weights were provided directly.
+    bool weightsWereProvided = false;
 
-    // Private helper functions.
+    // Mode for initializing the weights.
+    WeightInitMethod initMethod_;
+
+    // Helper functions.
     void calculateUniqueRanges(const std::vector<CSVRow>& rows);
     void calculateEntriesAndXsecs(const std::vector<CSVRow>& rows);
     void determineTotalCrossSection();
     void calculateWeights();
-
-    // Returns true if 'value' lies within [minVal, maxVal) (or [minVal, maxVal] if inclusiveUpper==true).
-    bool inQ2Range(double value, double minVal, double maxVal, bool inclusiveUpper = false) const;
+    bool inQ2Range(double value, double minVal, double maxVal, bool inclusiveUpper) const;
+    
+    // Loads experimental luminosity from a CSV file.
+    void loadExperimentalLuminosity(const std::string &lumiCSVFilename);
+    // Loads precalculated weights from a CSV file (format: Q2min,Q2max,collisionType,eEnergy,hEnergy,weight).
+    void loadPrecalculatedWeights(const std::string &precalcCSVFilename);
 };
 
 #endif // WEIGHTS_H
