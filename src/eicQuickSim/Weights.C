@@ -84,6 +84,7 @@ void Weights::clearUserProvidedWeights() {
 void Weights::updateUserProvidedWeight(double userQ2min, double userQ2max, double userWeight) {
     bool found = false;
     for (size_t i = 0; i < Q2mins.size(); i++) {
+        std::cout << Q2mins[i] << " , " << Q2maxs[i] << std::endl;
         if (Q2mins[i] == userQ2min && Q2maxs[i] == userQ2max) {
             providedWeights[i] = userWeight;
             found = true;
