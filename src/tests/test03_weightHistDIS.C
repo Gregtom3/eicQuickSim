@@ -35,9 +35,7 @@ int main() {
     std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
     // Step 2: Get Q2 weights
-    Weights q2Weights(combinedRows);
-    // Load in experimental luminosity to scale weights
-    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    Weights q2Weights(combinedRows, WeightInitMethod::LUMI_CSV, "src/eicQuickSim/en_lumi.csv");
     std::cout << "Q2=1.01 --> " << q2Weights.getWeight(1.01) << std::endl;
     std::cout << "Q2=10.01 --> " << q2Weights.getWeight(10.01) << std::endl;
     std::cout << "Q2=100.01 --> " << q2Weights.getWeight(100.01) << std::endl;
@@ -152,8 +150,7 @@ int main() {
     c2->SetLogx();
     c2->SetLogy();
     hX->Draw("HIST");
-    c2->RedrawAxis();
-    c2->SaveAs("artifacts/test03_xhist.png");
+    c2->RedrawAxis();"src/eicQuickSim/en_lumi.csv"st.png");
     
     // W histogram: linear-scale canvas.
     TCanvas *c3 = new TCanvas("c3", "W Distribution", 800, 600);

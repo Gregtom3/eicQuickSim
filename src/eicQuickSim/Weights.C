@@ -3,18 +3,31 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <stdexcept>
 #include <cmath>
 
 using std::cout;
 using std::cerr;
 using std::endl;
 
-// Constructor: process the CSV rows and compute Q2 ranges, entries, cross sections, and weights.
-Weights::Weights(const std::vector<CSVRow>& combinedRows) {
+///////////////////////////////////////////////////////////
+// Constructor
+///////////////////////////////////////////////////////////
+Weights::Weights(const std::vector<CSVRow>& combinedRows, WeightInitMethod initMethod, const std::string &csvFilename)
+    : initMethod_(initMethod)
+{
+    // Mode 3: PRECALCULATED weights.
+    if (initMethod_ == WeightInitMethod::PRECALCULATED) {
+        loadPrecalculatedWeights(csvFilename);
+        weightsWereProvided = true;
+        return;
+    }
+    
+    // For modes LUMI_CSV and DEFAULT, ensure rows are provided.
     if (combinedRows.empty())
         throw std::runtime_error("Error: No CSV rows provided.");
-
-    // Verify that all CSVRows have the same eEnergy and hEnergy.
+    
+    // Verify that all CSVRows have the same electron and hadron energies.
     energy_e = combinedRows[0].eEnergy;
     energy_h = combinedRows[0].hEnergy;
     for (const auto& row : combinedRows) {
@@ -22,18 +35,26 @@ Weights::Weights(const std::vector<CSVRow>& combinedRows) {
             throw std::runtime_error("Error: All CSV rows must have the same electron and hadron energies.");
         }
     }
-
-    // Build unique Q2 range vectors.
+    
+    // Process the CSV rows.
     calculateUniqueRanges(combinedRows);
-    // Build Q2 entries, cross sections, and record any provided weights.
     calculateEntriesAndXsecs(combinedRows);
-    // Determine total cross section.
     determineTotalCrossSection();
-    // Calculate Q2 weights and compute simulated luminosity.
     calculateWeights();
+    
+    // Mode LUMI_CSV: load experimental luminosity from file.
+    if (initMethod_ == WeightInitMethod::LUMI_CSV) {
+        loadExperimentalLuminosity(csvFilename);
+    }
+    // Mode DEFAULT: assume experimental luminosity is 1.
+    else if (initMethod_ == WeightInitMethod::DEFAULT) {
+        experimentalLumi = 1.0;
+    }
 }
 
-// Extract unique Q2 ranges (unique (q2Min, q2Max) pairs) and sort them by q2Min.
+///////////////////////////////////////////////////////////
+// Private Helper Functions
+///////////////////////////////////////////////////////////
 void Weights::calculateUniqueRanges(const std::vector<CSVRow>& rows) {
     std::vector<std::pair<int, int>> uniqueRanges;
     for (const auto& row : rows) {
@@ -53,12 +74,11 @@ void Weights::calculateUniqueRanges(const std::vector<CSVRow>& rows) {
     }
 }
 
-// For each CSVRow, add its nEvents to the appropriate unique Q2 range, record the cross section,
-// and if a weight is provided (>= 0), store it in providedWeights.
 void Weights::calculateEntriesAndXsecs(const std::vector<CSVRow>& rows) {
     Q2entries.resize(Q2mins.size(), 0);
     Q2xsecs.resize(Q2mins.size(), 0.0);
     providedWeights.resize(Q2mins.size(), -1.0);  // -1 indicates "not provided"
+    
     for (const auto& row : rows) {
         for (size_t i = 0; i < Q2mins.size(); i++) {
             if (Q2mins[i] == row.q2Min && Q2maxs[i] == row.q2Max) {
@@ -75,32 +95,8 @@ void Weights::calculateEntriesAndXsecs(const std::vector<CSVRow>& rows) {
     }
 }
 
-// Clears the current Q2 ranges and provided weights.
-void Weights::clearUserProvidedWeights() {
-    Q2mins.clear();
-    Q2maxs.clear();
-    Q2weights.clear();
-    providedWeights.clear();
-    weightsWereProvided = false;
-    std::cout << "Cleared all user provided Q2 ranges and weights." << std::endl;
-}
-
-// Adds a new user provided Q2 range and weight by appending to the vectors.
-void Weights::updateUserProvidedWeight(double userQ2min, double userQ2max, double userWeight) {
-    Q2mins.push_back(userQ2min);
-    Q2maxs.push_back(userQ2max);
-    providedWeights.push_back(userWeight);
-    Q2weights.push_back(userWeight);
-    std::cout << "Added user provided weight " << userWeight
-              << " for Q2 range > " << userQ2min
-              << " && < " << userQ2max << std::endl;
-    weightsWereProvided = true;
-}
-
-// Determine the total cross section based on two cases.
-// Case A: If the first unique range fully contains all others, use its cross section.
-// Case B: If the unique ranges "link" (adjacent ranges are continuous), sum all cross sections.
 void Weights::determineTotalCrossSection() {
+    // Case A: If the first unique range fully contains all others.
     bool caseA = true;
     for (size_t i = 1; i < Q2mins.size(); i++) {
         if (!(Q2mins[0] <= Q2mins[i] && Q2maxs[0] >= Q2maxs[i])) {
@@ -112,6 +108,8 @@ void Weights::determineTotalCrossSection() {
         totalCrossSection = Q2xsecs[0];
         return;
     }
+    
+    // Case B: If the unique ranges "link" (adjacent ranges are continuous).
     bool caseB = true;
     for (size_t i = 0; i + 1 < Q2mins.size(); i++) {
         if (Q2maxs[i] != Q2mins[i+1]) {
@@ -121,34 +119,33 @@ void Weights::determineTotalCrossSection() {
     }
     if (caseB) {
         totalCrossSection = 0.0;
-        for (double xs : Q2xsecs) {
+        for (double xs : Q2xsecs)
             totalCrossSection += xs;
-        }
         return;
     }
+    
     throw std::runtime_error("Error: Q2 ranges do not satisfy either Case A or Case B for determining total cross section.");
 }
 
-// Calculate Q2 weights using a luminosity-based method and compute simulatedLuminosity.
-// If a weight was provided by the CSV rows for a given Q2 bracket, use it directly.
 void Weights::calculateWeights() {
     long long totalEntriesLocal = 0;
-    for (auto entry : Q2entries) {
+    for (auto entry : Q2entries)
         totalEntriesLocal += entry;
-    }
+    
     totalEvents = totalEntriesLocal;
     double lumiTotal = static_cast<double>(totalEntriesLocal) / totalCrossSection;
-    simulatedLumi = lumiTotal; // simulatedLuminosity = totalEvents/totalCrossSection
+    simulatedLumi = lumiTotal;
+    
     Q2weights.resize(Q2xsecs.size(), 0.0);
     
     for (size_t i = 0; i < Q2mins.size(); i++) {
-        // If a user-specified weight was provided for this Q2 bracket, use it directly.
+        // If a user-specified weight was provided, use it.
         if (i < providedWeights.size() && providedWeights[i] >= 0) {
             Q2weights[i] = providedWeights[i];
-            std::cout << "\tUsing provided weight for Q2 > " << Q2mins[i];
+            cout << "\tUsing provided weight for Q2 > " << Q2mins[i];
             if (Q2maxs[i] > 0)
-                std::cout << " && Q2 < " << Q2maxs[i];
-            std::cout << ": " << Q2weights[i] << std::endl;
+                cout << " && Q2 < " << Q2maxs[i];
+            cout << ": " << Q2weights[i] << endl;
             continue;
         }
         
@@ -164,17 +161,15 @@ void Weights::calculateWeights() {
             throw std::runtime_error("Error: Computed luminosity for a Q2 range is zero.");
         }
         Q2weights[i] = lumiTotal / lumiThis;
-        std::cout << "\tQ2 > " << Q2mins[i];
+        cout << "\tQ2 > " << Q2mins[i];
         if (Q2maxs[i] > 0)
-            std::cout << " && Q2 < " << Q2maxs[i];
-        std::cout << ":" << std::endl;
-        std::cout << "\t\tcount    = " << Q2entries[i] << std::endl;
-        std::cout << "\t\txsec     = " << Q2xsecs[i] << std::endl;
-        std::cout << "\t\tweight   = " << Q2weights[i] << std::endl;
+            cout << " && Q2 < " << Q2maxs[i];
+        cout << ":\n\t\tcount    = " << Q2entries[i]
+             << "\n\t\txsec     = " << Q2xsecs[i]
+             << "\n\t\tweight   = " << Q2weights[i] << endl;
     }
 }
 
-// Returns true if value is within [minVal, maxVal) or [minVal, maxVal] if inclusiveUpper==true.
 bool Weights::inQ2Range(double value, double minVal, double maxVal, bool inclusiveUpper) const {
     if (inclusiveUpper)
         return (value >= minVal && value <= maxVal);
@@ -182,17 +177,13 @@ bool Weights::inQ2Range(double value, double minVal, double maxVal, bool inclusi
         return (value >= minVal && value < maxVal);
 }
 
-// Loads experimental luminosity from a CSV file.
-// The file is expected to have a header and rows with:
-// electron_energy,hadron_energy,expected_lumi
-// This function finds the row that matches the stored eEnergy and hEnergy.
-void Weights::loadExperimentalLuminosity(const std::string& lumiCSVFilename) {
+void Weights::loadExperimentalLuminosity(const std::string &lumiCSVFilename) {
     std::ifstream fin(lumiCSVFilename);
     if (!fin)
         throw std::runtime_error("Error: Unable to open luminosity CSV file: " + lumiCSVFilename);
     
     std::string line;
-    // Read header line.
+    // Read header.
     if (!std::getline(fin, line))
         throw std::runtime_error("Error: Luminosity CSV file is empty.");
     
@@ -205,15 +196,12 @@ void Weights::loadExperimentalLuminosity(const std::string& lumiCSVFilename) {
         int file_eEnergy, file_hEnergy;
         double expectedLumi;
         
-        // Get electron_energy.
         if (!std::getline(ss, token, ','))
             continue;
         file_eEnergy = std::stoi(token);
-        // Get hadron_energy.
         if (!std::getline(ss, token, ','))
             continue;
         file_hEnergy = std::stoi(token);
-        // Get expected_lumi.
         if (!std::getline(ss, token, ','))
             continue;
         expectedLumi = std::stod(token);
@@ -221,7 +209,7 @@ void Weights::loadExperimentalLuminosity(const std::string& lumiCSVFilename) {
         if (file_eEnergy == energy_e && file_hEnergy == energy_h) {
             experimentalLumi = expectedLumi;
             found = true;
-            std::cout << "Loaded experimental luminosity: " << experimentalLumi << std::endl;
+            cout << "Loaded experimental luminosity: " << experimentalLumi << endl;
             break;
         }
     }
@@ -229,37 +217,105 @@ void Weights::loadExperimentalLuminosity(const std::string& lumiCSVFilename) {
         throw std::runtime_error("Error: No matching electron/hadron energy found in luminosity CSV file.");
 }
 
-// Returns the Q2 weight for a given Q2 value, multiplied by (experimentalLumi/simulatedLumi).
+void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
+    std::ifstream fin(precalcCSVFilename);
+    if (!fin)
+        throw std::runtime_error("Error: Unable to open pre-calculated weights CSV file: " + precalcCSVFilename);
+    
+    std::string line;
+    // Read and ignore header.
+    if (!std::getline(fin, line))
+        throw std::runtime_error("Error: Pre-calculated weights CSV file is empty.");
+    
+    // Clear current vectors.
+    Q2mins.clear();
+    Q2maxs.clear();
+    Q2weights.clear();
+    
+    // Expected format per row:
+    // Q2min, Q2max, collisionType, eEnergy, hEnergy, weight
+    while (std::getline(fin, line)) {
+        if (line.empty())
+            continue;
+        std::stringstream ss(line);
+        std::string token;
+        double q2min, q2max, weight;
+        std::string collisionType;
+        int file_eEnergy, file_hEnergy;
+        
+        if (!std::getline(ss, token, ','))
+            continue;
+        q2min = std::stod(token);
+        
+        if (!std::getline(ss, token, ','))
+            continue;
+        q2max = std::stod(token);
+        
+        if (!std::getline(ss, token, ','))
+            continue;
+        collisionType = token;
+        
+        if (!std::getline(ss, token, ','))
+            continue;
+        file_eEnergy = std::stoi(token);
+        
+        if (!std::getline(ss, token, ','))
+            continue;
+        file_hEnergy = std::stoi(token);
+        
+        if (!std::getline(ss, token, ','))
+            continue;
+        weight = std::stod(token);
+        
+        // Initialize energies if not already set.
+        if (energy_e == 0 && energy_h == 0) {
+            energy_e = file_eEnergy;
+            energy_h = file_hEnergy;
+        }
+        if (file_eEnergy == energy_e && file_hEnergy == energy_h) {
+            Q2mins.push_back(q2min);
+            Q2maxs.push_back(q2max);
+            Q2weights.push_back(weight);
+        }
+    }
+    if (Q2mins.empty() || Q2weights.empty())
+        throw std::runtime_error("Error: No matching pre-calculated weights found for the given energy configuration.");
+    weightsWereProvided = true;
+}
+
+///////////////////////////////////////////////////////////
+// Public Member Functions
+///////////////////////////////////////////////////////////
 double Weights::getWeight(double Q2) const {
     int idx = -1;
     for (size_t i = 0; i < Q2mins.size(); i++) {
         if (inQ2Range(Q2, Q2mins[i], Q2maxs[i], false)) {
-            idx = static_cast<int>(i); // if multiple match, the last one wins.
+            idx = static_cast<int>(i);
+            break;
         }
     }
     if (idx < 0)
         idx = 0;
+    
     double baseWeight = Q2weights[idx];
-    if(weightsWereProvided==true){
+    if (initMethod_ == WeightInitMethod::PRECALCULATED)
         return baseWeight;
-    }
-    else{
+    else
         return baseWeight * (experimentalLumi / simulatedLumi);
-    }
 }
 
-// Export CSV with weights.
-// For each CSVRow, we compute a weight and write the row with an appended weight column.
+
 bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::string &outFilePath) const {
+    // Write the main CSV with the appended weight column.
     std::ofstream ofs(outFilePath);
     if (!ofs.is_open()) {
-         std::cerr << "Error: Unable to open output file: " << outFilePath << std::endl;
+         cerr << "Error: Unable to open output file: " << outFilePath << endl;
          return false;
     }
-    // Write header.
+    // Header for full event information.
     ofs << "filename,Q2_min,Q2_max,electron_energy,hadron_energy,n_events,cross_section_pb,weight\n";
     for (const auto &row : rows) {
-         // Use just a smidgen infront of the Q2min 
+         // Determine the Q2 bracket using a value slightly above the minimum.
          double theQ2 = row.q2Min + 0.0001;
          double weight = getWeight(theQ2);
          ofs << row.filename << ","
@@ -272,5 +328,44 @@ bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::s
              << weight << "\n";
     }
     ofs.close();
+
+    // Determine the output filename for the pre-calculated weights file.
+    std::string outWeightsFilePath = outFilePath;
+    size_t pos = outWeightsFilePath.rfind(".");
+    if (pos != std::string::npos)
+         outWeightsFilePath = outWeightsFilePath.substr(0, pos) + "_weights.csv";
+    else
+         outWeightsFilePath += "_weights.csv";
+
+    // Write the pre-calculated weights CSV.
+    std::ofstream ofs_weights(outWeightsFilePath);
+    if (!ofs_weights.is_open()) {
+         cerr << "Error: Unable to open output weights file: " << outWeightsFilePath << endl;
+         return false;
+    }
+    // Header for pre-calculated weights.
+    ofs_weights << "Q2_min,Q2_max,collisionType,eEnergy,hEnergy,weight\n";
+    // For each Q2 bracket, determine the collision type:
+    // "ep" if the first matching CSVRow's filename contains "pythia8", otherwise "en".
+    for (size_t i = 0; i < Q2mins.size(); i++) {
+         std::string collisionType = "en";
+         for (const auto &row : rows) {
+             if (row.q2Min == static_cast<int>(Q2mins[i]) && row.q2Max == static_cast<int>(Q2maxs[i])) {
+                 if (row.filename.find("pythia8") != std::string::npos)
+                     collisionType = "ep";
+                 else
+                     collisionType = "en";
+                 break;
+             }
+         }
+         ofs_weights << Q2mins[i] << ","
+                     << Q2maxs[i] << ","
+                     << collisionType << ","
+                     << energy_e << ","
+                     << energy_h << ","
+                     << Q2weights[i] << "\n";
+    }
+    ofs_weights.close();
+    
     return true;
 }

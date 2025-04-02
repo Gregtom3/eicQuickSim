@@ -50,15 +50,15 @@ int main(int argc, char* argv[]) {
     std::cout << "Combined " << rows.size() << " CSV rows." << std::endl;
     
     // Step 3: Get Q² weights.
-    Weights q2Weights(rows);
-    
-    // Load experimental luminosity based on collision type.
-    if (collisionType == "ep") {
-        q2Weights.loadExperimentalLuminosity("src/eicQuickSim/ep_lumi.csv");
-    } else {
-        q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    std::string lumiFile = "";
+    if (collisionType == "ep"){
+        lumiFile = "src/eicQuickSim/ep_lumi.csv";
+    }else{
+        lumiFile = "src/eicQuickSim/en_lumi.csv";
     }
-    
+
+    Weights q2Weights(rows, WeightInitMethod::LUMI_CSV, lumiFile);
+
     // Write the CSV with weights to the user-specified output path.
     if (!q2Weights.exportCSVWithWeights(rows, outputPath)) {
         std::cerr << "Failed to export CSV with weights." << std::endl;

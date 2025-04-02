@@ -35,8 +35,7 @@ int main() {
     cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
     // Step 2: Get Q2 weights.
-    Weights q2Weights(combinedRows);
-    q2Weights.loadExperimentalLuminosity("src/eicQuickSim/en_lumi.csv");
+    Weights q2Weights(combinedRows, WeightInitMethod::LUMI_CSV, "src/eicQuickSim/en_lumi.csv");
     
     // Step 3: Load BinningScheme from YAML file.
     BinningScheme binScheme("src/tests/bins/test07.yaml");
