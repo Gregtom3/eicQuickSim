@@ -227,11 +227,6 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
     if (!std::getline(fin, line))
         throw std::runtime_error("Error: Pre-calculated weights CSV file is empty.");
     
-    // Clear current vectors.
-    Q2mins.clear();
-    Q2maxs.clear();
-    Q2weights.clear();
-    
     // Expected format per row:
     // Q2min, Q2max, collisionType, eEnergy, hEnergy, weight
     while (std::getline(fin, line)) {
@@ -292,6 +287,12 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
 // Public Member Functions
 ///////////////////////////////////////////////////////////
 double Weights::getWeight(double Q2) const {
+    if (Q2mins.empty() || Q2maxs.empty() || Q2weights.empty()) {
+        std::cerr << "[ERROR] Weights::getWeight called before weights were initialized!" << std::endl;
+        std::cerr << "Q2: " << Q2 << std::endl;
+        throw std::runtime_error("Empty weights vectors in Weights::getWeight");
+    }
+
     int idx = -1;
 
     for (int i = 0; i < Q2mins.size(); i++) {
@@ -304,6 +305,7 @@ double Weights::getWeight(double Q2) const {
     }
     if (idx < 0)
         idx = 0;
+
     std::cout << idx << std::endl;
     std::cout << Q2weights[idx] << std::endl;
     double baseWeight = Q2weights[idx];
@@ -312,7 +314,6 @@ double Weights::getWeight(double Q2) const {
     else
         return baseWeight * (experimentalLumi / simulatedLumi);
 }
-
 
 bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::string &outFilePath) const {
     // Write the main CSV with the appended weight column.
