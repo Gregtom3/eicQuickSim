@@ -291,8 +291,9 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
 ///////////////////////////////////////////////////////////
 double Weights::getWeight(double Q2) const {
     int idx = -1;
-    std::cout << "A" << std::endl;
+
     for (size_t i = 0; i < Q2mins.size(); i++) {
+        std::cout << "A" << std::endl;
         if (inQ2Range(Q2, Q2mins[i], Q2maxs[i], false)) {
             std::cout << "HERE" << std::endl;
             idx = static_cast<int>(i);
