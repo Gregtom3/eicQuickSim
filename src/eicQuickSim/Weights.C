@@ -277,6 +277,8 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
             std::cout << line << std::endl;
             Q2mins.push_back(q2min);
             Q2maxs.push_back(q2max);
+            std::cout << "B" << std::endl;
+            std::cout << Q2mins.size() << std::endl;
             Q2weights.push_back(weight);
             std::cout << weight << std::endl;
         }
