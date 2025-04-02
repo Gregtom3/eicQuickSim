@@ -79,6 +79,7 @@ void Weights::calculateEntriesAndXsecs(const std::vector<CSVRow>& rows) {
 void Weights::clearUserProvidedWeights() {
     Q2mins.clear();
     Q2maxs.clear();
+    Q2weights.clear();
     providedWeights.clear();
     weightsWereProvided = false;
     std::cout << "Cleared all user provided Q2 ranges and weights." << std::endl;
@@ -88,6 +89,7 @@ void Weights::clearUserProvidedWeights() {
 void Weights::updateUserProvidedWeight(double userQ2min, double userQ2max, double userWeight) {
     Q2mins.push_back(userQ2min);
     Q2maxs.push_back(userQ2max);
+    Q2weights.push_back(1.0); // they will be updated later
     providedWeights.push_back(userWeight);
     std::cout << "Added user provided weight " << userWeight
               << " for Q2 range > " << userQ2min
