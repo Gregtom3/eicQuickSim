@@ -1,0 +1,10 @@
+energy_config: "example_energy"
+dimensions:
+  - name: "energy"
+    branch_true: "true_energy"
+    branch_reco: "reco_energy"
+    edges: [0, 10, 20]
+  - name: "angle"
+    branch_true: "true_angle"
+    branch_reco: "reco_angle"
+    edges: [0, 50, 100]

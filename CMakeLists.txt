@@ -51,6 +51,7 @@ add_eic_test_minimal(test05_weightHistSIDIS "src/tests/test05_weightHistSIDIS.C"
 add_eic_test_minimal(test06_uploadCSV "src/tests/test06_uploadCSV.C" ${EIC_FileManager} ${EIC_Weights})
 add_eic_test_minimal(test07_epNevents "src/tests/test07_epNevents.C" ${EIC_FileManager} ${EIC_Weights} ${EIC_BinningScheme} ${EIC_Kinematics})
 add_eic_test_minimal(test08_weightHistDISIDIS "src/tests/test08_weightHistDISIDIS.C" ${EIC_FileManager} ${EIC_Weights} ${EIC_Kinematics} ${EIC_BinningScheme})
+add_eic_test_minimal(test09_binningScheme "src/tests/test09_binningScheme.C" ${EIC_BinningScheme})
 
 # ---------------------------------------------------------------------
 # Macro executables: these come from macros/ and are installed.

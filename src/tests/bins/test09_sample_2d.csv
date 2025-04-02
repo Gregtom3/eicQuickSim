@@ -1,0 +1,5 @@
+bin1min,bin1max,bin1_branch_true,bin1_branch_reco,bin2min,bin2max,bin2_branch_true,bin2_branch_reco
+0,10,true_energy,reco_energy,0,50,true_angle,reco_angle
+0,10,true_energy,reco_energy,50,100,true_angle,reco_angle
+10,20,true_energy,reco_energy,0,50,true_angle,reco_angle
+10,20,true_energy,reco_energy,50,100,true_angle,reco_angle
