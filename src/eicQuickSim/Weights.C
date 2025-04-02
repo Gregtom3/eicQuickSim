@@ -227,6 +227,11 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
     if (!std::getline(fin, line))
         throw std::runtime_error("Error: Pre-calculated weights CSV file is empty.");
     
+    // Clear current vectors.
+    Q2mins.clear();
+    Q2maxs.clear();
+    Q2weights.clear();
+    
     // Expected format per row:
     // Q2min, Q2max, collisionType, eEnergy, hEnergy, weight
     while (std::getline(fin, line)) {
@@ -269,13 +274,9 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
         }
         
         if (file_eEnergy == energy_e && file_hEnergy == energy_h) {
-            std::cout << line << std::endl;
             Q2mins.push_back(q2min);
             Q2maxs.push_back(q2max);
-            std::cout << "B" << std::endl;
-            std::cout << Q2mins.size() << std::endl;
             Q2weights.push_back(weight);
-            std::cout << weight << std::endl;
         }
     }
     if (Q2mins.empty() || Q2weights.empty())
@@ -287,33 +288,21 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
 // Public Member Functions
 ///////////////////////////////////////////////////////////
 double Weights::getWeight(double Q2) const {
-    if (Q2mins.empty() || Q2maxs.empty() || Q2weights.empty()) {
-        std::cerr << "[ERROR] Weights::getWeight called before weights were initialized!" << std::endl;
-        std::cerr << "Q2: " << Q2 << std::endl;
-        throw std::runtime_error("Empty weights vectors in Weights::getWeight");
-    }
-
     int idx = -1;
-
-    for (int i = 0; i < Q2mins.size(); i++) {
-        std::cout << "A" << std::endl;
+    for (size_t i = 0; i < Q2mins.size(); i++) {
         if (inQ2Range(Q2, Q2mins[i], Q2maxs[i], false)) {
-            std::cout << "HERE" << std::endl;
-            idx = i;
+            idx = static_cast<int>(i);
         }
-        std::cout << idx << std::endl;
     }
     if (idx < 0)
         idx = 0;
-
-    std::cout << idx << std::endl;
-    std::cout << Q2weights[idx] << std::endl;
     double baseWeight = Q2weights[idx];
     if (initMethod_ == WeightInitMethod::PRECALCULATED)
         return baseWeight;
     else
         return baseWeight * (experimentalLumi / simulatedLumi);
 }
+
 
 bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::string &outFilePath) const {
     // Write the main CSV with the appended weight column.
