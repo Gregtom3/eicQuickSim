@@ -293,9 +293,10 @@ double Weights::getWeight(double Q2) const {
     int idx = -1;
     for (size_t i = 0; i < Q2mins.size(); i++) {
         if (inQ2Range(Q2, Q2mins[i], Q2maxs[i], false)) {
+            std::cout << "HERE" << std::endl;
             idx = static_cast<int>(i);
-            break;
         }
+        std::cout << idx << std::endl;
     }
     if (idx < 0)
         idx = 0;
