@@ -116,6 +116,17 @@ void Analysis::setEnergyConfig(const std::string& energyConfig) {
 
 void Analysis::setCSVSource(const std::string& csvSource) {
     m_csvSource = csvSource;
+    std::string WeightsFilePath = csvSource;
+    size_t pos = WeightsFilePath.rfind(".");
+    if (pos != std::string::npos)
+        WeightsFilePath = WeightsFilePath.substr(0, pos) + "_weights.csv";
+    else
+        WeightsFilePath += "_weights.csv";
+    setCSVWeights(WeightsFilePath);
+}
+
+void Analysis::setCSVWeights(const std::string& csvWeights) {
+    m_weightsPath = csvWeights;
 }
 
 void Analysis::setMaxEvents(int maxEvents) {
@@ -201,7 +212,7 @@ void Analysis::run() {
         return;
     }
     loadCSVRows();
-    Weights q2Weights(m_combinedRows, WeightInitMethod::LUMI_CSV, "src/eicQuickSim/en_lumi.csv");
+    Weights q2Weights(m_combinedRows, WeightInitMethod::PRECALCULATED, m_weightsPath);
     std::cout << "Q2=1.01 --> " << m_q2Weights->getWeight(1.01) << std::endl;
     std::cout << "Q2=10.01 --> " << m_q2Weights->getWeight(10.01) << std::endl;
     std::cout << "Q2=100.01 --> " << m_q2Weights->getWeight(100.01) << std::endl;

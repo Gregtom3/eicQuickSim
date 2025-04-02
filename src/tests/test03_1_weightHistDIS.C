@@ -31,11 +31,17 @@ int main() {
     std::cout << "Combined " << combinedRows.size() << " CSV rows.\n";
     
     // Step 2: Get Q2 weights
-    Weights q2Weights(combinedRows, WeightInitMethod::LUMI_CSV, "src/eicQuickSim/en_lumi.csv");
+    Weights q2Weights_tmp(combinedRows, WeightInitMethod::LUMI_CSV, "src/eicQuickSim/en_lumi.csv");
+    std::cout << "Q2=1.01 --> " << q2Weights_tmp.getWeight(1.01) << std::endl;
+    std::cout << "Q2=10.01 --> " << q2Weights_tmp.getWeight(10.01) << std::endl;
+    std::cout << "Q2=100.01 --> " << q2Weights_tmp.getWeight(100.01) << std::endl;
+    // Step 2.333: Save the Q2 weights
+    q2Weights_tmp.exportCSVWithWeights(combinedRows, "artifacts/test03_1.csv");
+    // Step 2.666: Load the precalculated weights
+    Weights q2Weights(combinedRows, WeightInitMethod::PRECALCULATED, "artifacts/test03_1_weights.csv");
     std::cout << "Q2=1.01 --> " << q2Weights.getWeight(1.01) << std::endl;
     std::cout << "Q2=10.01 --> " << q2Weights.getWeight(10.01) << std::endl;
     std::cout << "Q2=100.01 --> " << q2Weights.getWeight(100.01) << std::endl;
-
     // Step 3: Create global histograms.
     // Q2 histogram: logarithmic bins (Q2 range from 0.1 to 1000 GeV^2).
     int nBins = 100;

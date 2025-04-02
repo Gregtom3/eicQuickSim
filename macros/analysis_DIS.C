@@ -6,7 +6,7 @@ using namespace eicQuickSim;
 int main(int argc, char* argv[]) {
     if (argc < 6) {
         std::cerr << "Usage: " << argv[0]
-                  << " <energy configuration> <CSV source> <max events> <collision type> <path to bin scheme> [output file path]"
+                  << " <energy configuration> <CSV of Files> <max events> <collision type> <path to bin scheme> [output file path]"
                   << std::endl;
         return 1;
     }

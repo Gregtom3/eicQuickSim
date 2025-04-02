@@ -45,6 +45,7 @@ add_eic_test_minimal(test00_readData "src/tests/test00_readData.C" ${EIC_Kinemat
 add_eic_test_minimal(test01_grabFiles "src/tests/test01_grabFiles.C" ${EIC_FileManager})
 add_eic_test_minimal(test02_dataSummary "src/tests/test02_dataSummary.C" ${EIC_FileManager} ${EIC_Weights})
 add_eic_test_minimal(test03_weightHistDIS "src/tests/test03_weightHistDIS.C" ${EIC_FileManager} ${EIC_Weights} ${EIC_Kinematics})
+add_eic_test_minimal(test03_1_weightHistDIS "src/tests/test03_1_weightHistDIS.C" ${EIC_FileManager} ${EIC_Weights} ${EIC_Kinematics})
 add_eic_test_minimal(test04_printEvent "src/tests/test04_printEvent.C")
 add_eic_test_minimal(test05_weightHistSIDIS "src/tests/test05_weightHistSIDIS.C" ${EIC_FileManager} ${EIC_Weights} ${EIC_Kinematics} ${EIC_BinningScheme})
 add_eic_test_minimal(test06_uploadCSV "src/tests/test06_uploadCSV.C" ${EIC_FileManager} ${EIC_Weights})

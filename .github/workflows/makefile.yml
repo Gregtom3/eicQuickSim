@@ -75,6 +75,7 @@ jobs:
       run: |
         ./eic-shell <<'EOF'
         make test03_weightHistDIS
+        make test03_1_weightHistDIS
         EOF
 
     - name: Run test04_printEvent

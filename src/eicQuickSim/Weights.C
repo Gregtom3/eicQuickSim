@@ -363,7 +363,7 @@ bool Weights::exportCSVWithWeights(const std::vector<CSVRow>& rows, const std::s
                      << collisionType << ","
                      << energy_e << ","
                      << energy_h << ","
-                     << Q2weights[i] << "\n";
+                     << Q2weights[i]*(experimentalLumi / simulatedLumi) << "\n";
     }
     ofs_weights.close();
     
