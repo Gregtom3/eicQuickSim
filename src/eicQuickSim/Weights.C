@@ -278,6 +278,7 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
             Q2mins.push_back(q2min);
             Q2maxs.push_back(q2max);
             Q2weights.push_back(weight);
+            std::cout << weight << std::endl;
         }
     }
     if (Q2mins.empty() || Q2weights.empty())
@@ -298,6 +299,7 @@ double Weights::getWeight(double Q2) const {
     }
     if (idx < 0)
         idx = 0;
+    std::cout << idx << std::endl;
     std::cout << Q2weights[idx] << std::endl;
     double baseWeight = Q2weights[idx];
     if (initMethod_ == WeightInitMethod::PRECALCULATED)
