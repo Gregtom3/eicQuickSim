@@ -89,8 +89,8 @@ void Weights::clearUserProvidedWeights() {
 void Weights::updateUserProvidedWeight(double userQ2min, double userQ2max, double userWeight) {
     Q2mins.push_back(userQ2min);
     Q2maxs.push_back(userQ2max);
-    Q2weights.push_back(1.0); // they will be updated later
     providedWeights.push_back(userWeight);
+    Q2weights.push_back(userWeight);
     std::cout << "Added user provided weight " << userWeight
               << " for Q2 range > " << userQ2min
               << " && < " << userQ2max << std::endl;
