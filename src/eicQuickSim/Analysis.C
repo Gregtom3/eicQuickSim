@@ -213,6 +213,7 @@ void Analysis::run() {
     }
     loadCSVRows();
     Weights q2Weights(m_combinedRows, WeightInitMethod::PRECALCULATED, m_weightsPath);
+    std::cout << m_weightsPath << std::endl;
     std::cout << "Q2=1.01 --> " << m_q2Weights->getWeight(1.01) << std::endl;
     std::cout << "Q2=10.01 --> " << m_q2Weights->getWeight(10.01) << std::endl;
     std::cout << "Q2=100.01 --> " << m_q2Weights->getWeight(100.01) << std::endl;
