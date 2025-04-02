@@ -298,7 +298,7 @@ double Weights::getWeight(double Q2) const {
     }
     if (idx < 0)
         idx = 0;
-    
+    std::cout << Q2weights[idx] << std::endl;
     double baseWeight = Q2weights[idx];
     if (initMethod_ == WeightInitMethod::PRECALCULATED)
         return baseWeight;
