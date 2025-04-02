@@ -272,8 +272,9 @@ void Weights::loadPrecalculatedWeights(const std::string &precalcCSVFilename) {
             energy_e = file_eEnergy;
             energy_h = file_hEnergy;
         }
-        std::cout << line << std::endl;
+        
         if (file_eEnergy == energy_e && file_hEnergy == energy_h) {
+            std::cout << line << std::endl;
             Q2mins.push_back(q2min);
             Q2maxs.push_back(q2max);
             Q2weights.push_back(weight);
