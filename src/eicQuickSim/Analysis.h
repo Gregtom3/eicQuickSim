@@ -69,6 +69,7 @@ private:
 
     // Data members.
     std::vector<CSVRow> m_combinedRows;
+    Weights* m_q2Weights;
     BinningScheme* m_binScheme;
 
     // Internal functions.
