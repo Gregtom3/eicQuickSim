@@ -75,30 +75,23 @@ void Weights::calculateEntriesAndXsecs(const std::vector<CSVRow>& rows) {
     }
 }
 
+// Clears the current Q2 ranges and provided weights.
 void Weights::clearUserProvidedWeights() {
-    std::fill(providedWeights.begin(), providedWeights.end(), -1.0);
+    Q2mins.clear();
+    Q2maxs.clear();
+    providedWeights.clear();
     weightsWereProvided = false;
-    std::cout << "All user provided weights have been cleared." << std::endl;
+    std::cout << "Cleared all user provided Q2 ranges and weights." << std::endl;
 }
 
+// Adds a new user provided Q2 range and weight by appending to the vectors.
 void Weights::updateUserProvidedWeight(double userQ2min, double userQ2max, double userWeight) {
-    bool found = false;
-    for (size_t i = 0; i < Q2mins.size(); i++) {
-        std::cout << Q2mins[i] << " , " << Q2maxs[i] << std::endl;
-        if (Q2mins[i] == userQ2min && Q2maxs[i] == userQ2max) {
-            providedWeights[i] = userWeight;
-            found = true;
-            std::cout << "User provided weight " << userWeight
-                      << " for Q2 range > " << userQ2min
-                      << " && < " << userQ2max << std::endl;
-            break;
-        }
-    }
-    if (!found) {
-        throw std::runtime_error("Error: Specified Q2 range (" +
-                                 std::to_string(userQ2min) + ", " +
-                                 std::to_string(userQ2max) + ") not found.");
-    }
+    Q2mins.push_back(userQ2min);
+    Q2maxs.push_back(userQ2max);
+    providedWeights.push_back(userWeight);
+    std::cout << "Added user provided weight " << userWeight
+              << " for Q2 range > " << userQ2min
+              << " && < " << userQ2max << std::endl;
     weightsWereProvided = true;
 }
 
