@@ -186,3 +186,9 @@ eic-shell
 # artifacts
 artifacts/*.png
 artifacts/*.csv
+
+# root
+artifacts/*.root
+
+# out
+out/*

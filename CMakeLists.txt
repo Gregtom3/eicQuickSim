@@ -27,6 +27,35 @@ set(EIC_Kinematics ${CMAKE_SOURCE_DIR}/src/eicQuickSim/Kinematics.C)
 set(EIC_BinningScheme ${CMAKE_SOURCE_DIR}/src/eicQuickSim/BinningScheme.C)
 set(EIC_CombinedRowsProcessor ${CMAKE_SOURCE_DIR}/src/eicQuickSim/CombinedRowsProcessor.C)
 set(EIC_Analysis ${CMAKE_SOURCE_DIR}/src/eicQuickSim/Analysis.C)
+set(EIC_TreeManager ${CMAKE_SOURCE_DIR}/src/eicQuickSim/TreeManager.C)
+
+# ---------------------------------------------------------------------
+# Build shared library for use in ROOT macros
+set(EIC_ALL_SOURCES
+    ${EIC_FileManager}
+    ${EIC_Weights}
+    ${EIC_Kinematics}
+    ${EIC_BinningScheme}
+    ${EIC_CombinedRowsProcessor}
+    ${EIC_Analysis}
+    ${EIC_TreeManager}
+)
+
+add_library(eicQuickSim SHARED ${EIC_ALL_SOURCES})
+target_include_directories(eicQuickSim PUBLIC ${CMAKE_SOURCE_DIR}/src/eicQuickSim)
+target_link_libraries(eicQuickSim PUBLIC ${ROOT_LIBRARIES} yaml-cpp
+    "${HEPMC3_LIB_DIR}/libHepMC3.so" "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so")
+
+set_target_properties(eicQuickSim PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin
+)
+
+install(FILES $<TARGET_FILE:eicQuickSim> DESTINATION lib)
 
 # ---------------------------------------------------------------------
 # Define a function for adding a test executable with minimal sources.
@@ -51,20 +80,5 @@ add_eic_test_minimal(test05_weightHistSIDIS "src/tests/test05_weightHistSIDIS.C"
 add_eic_test_minimal(test06_uploadCSV "src/tests/test06_uploadCSV.C" ${EIC_FileManager} ${EIC_Weights})
 add_eic_test_minimal(test07_epNevents "src/tests/test07_epNevents.C" ${EIC_FileManager} ${EIC_Weights} ${EIC_BinningScheme} ${EIC_Kinematics})
 add_eic_test_minimal(test08_weightHistDISIDIS "src/tests/test08_weightHistDISIDIS.C" ${EIC_FileManager} ${EIC_Weights} ${EIC_Kinematics} ${EIC_BinningScheme})
-
-# ---------------------------------------------------------------------
-# Macro executables: these come from macros/ and are installed.
-function(add_eic_executable targetName macroSource)
-    add_executable(${targetName} ${macroSource})
-    target_sources(${targetName} PRIVATE ${EIC_FileManager} ${EIC_Weights} ${EIC_Kinematics} ${EIC_BinningScheme} ${EIC_CombinedRowsProcessor} ${EIC_Analysis})
-    target_link_libraries(${targetName} PRIVATE ${ROOT_LIBRARIES} yaml-cpp
-        "${HEPMC3_LIB_DIR}/libHepMC3.so" "${HEPMC3_LIB_DIR}/libHepMC3rootIO.so")
-    install(TARGETS ${targetName} RUNTIME DESTINATION bin)
-endfunction()
-
-add_eic_executable(analysis_DIS "macros/analysis_DIS.C")
-add_eic_executable(analysis_SIDIS "macros/analysis_SIDIS.C")
-add_eic_executable(analysis_DISIDIS "macros/analysis_DISIDIS.C")
-add_eic_executable(preprocess_HPC "macros/preprocess_HPC.C")
 
 enable_testing()

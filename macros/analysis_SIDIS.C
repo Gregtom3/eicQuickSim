@@ -1,30 +1,17 @@
+R__LOAD_LIBRARY(build/lib/libeicQuickSim.so)
+R__ADD_INCLUDE_PATH(src/eicQuickSim)
+
 #include "Analysis.h"
 #include <iostream>
 
-using namespace eicQuickSim;
-
-int main(int argc, char* argv[]) {
-    if(argc < 6) {
-        std::cerr << "Usage: " << argv[0]
-                  << " <energy configuration> <CSV source> <max events> <collision type> <path to bin scheme> [output file path]"
-                  << std::endl;
-        return 1;
-    }
-    
-    Analysis analysis;
-    analysis.setAnalysisType("SIDIS");
-    analysis.setEnergyConfig(argv[1]);
-    analysis.setCSVSource(argv[2]);
-    analysis.setMaxEvents(std::stoi(argv[3]));
-    analysis.setCollisionType(argv[4]);
-    analysis.setBinningSchemePath(argv[5]);
-    if(argc >= 7)
-        analysis.setOutputCSV(argv[6]);
-    
-    analysis.setSIDISPid(211);
-    
-    analysis.run();
-    analysis.end();
-    
-    return 0;
+//   - yamlConfig: path to the YAML file containing the configuration
+//   - pid: the particle ID to use for SIDIS
+void analysis_SIDIS(const char* yamlConfig, int pid) {
+    using namespace eicQuickSim;
+    Analysis a;
+    a.initFromYaml(yamlConfig);
+    a.setSIDISPid(pid);
+    // Run the analysis.
+    a.run();
+    a.end();
 }

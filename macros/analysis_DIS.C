@@ -1,28 +1,13 @@
+R__LOAD_LIBRARY(build/lib/libeicQuickSim.so)
+R__ADD_INCLUDE_PATH(src/eicQuickSim)
+
 #include "Analysis.h"
 #include <iostream>
 
-using namespace eicQuickSim;
-
-int main(int argc, char* argv[]) {
-    if (argc < 6) {
-        std::cerr << "Usage: " << argv[0]
-                  << " <energy configuration> <CSV of Files> <max events> <collision type> <path to bin scheme> [output file path]"
-                  << std::endl;
-        return 1;
-    }
-    
-    Analysis analysis;
-    analysis.setAnalysisType("DIS");
-    analysis.setEnergyConfig(argv[1]);
-    analysis.setCSVSource(argv[2]);
-    analysis.setMaxEvents(std::stoi(argv[3]));
-    analysis.setCollisionType(argv[4]);
-    analysis.setBinningSchemePath(argv[5]);
-    if(argc >= 7)
-        analysis.setOutputCSV(argv[6]);
-    
-    analysis.run();
-    analysis.end();
-    
-    return 0;
+void analysis_DIS(const char* yamlConfig = "out/test_v0/config_en_5x41/config.yaml") {
+    using namespace eicQuickSim;
+    Analysis a;
+    a.initFromYaml(yamlConfig);
+    a.run();
+    a.end();
 }

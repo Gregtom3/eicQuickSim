@@ -1,3 +1,6 @@
+R__LOAD_LIBRARY(build/lib/libeicQuickSim.so)
+R__ADD_INCLUDE_PATH(src/eicQuickSim)
+
 #include "FileManager.h"
 #include "CombinedRowsProcessor.h"
 #include "Weights.h"
@@ -6,65 +9,62 @@
 #include <string>
 
 using std::cout;
+using std::cerr;
 using std::endl;
 
-int main(int argc, char* argv[]) {
-    // Check that the correct number of arguments is provided.
-    if (argc < 6) {
-        std::cerr << "Usage: " << argv[0]
-                  << " <energy configuration (e.g., 10x100)> <number of files> <max events> <collision type (ep or en)> <output CSV path>"
-                  << std::endl;
-        return 1;
-    }
+void preprocess_HPC(const char* energyConfig, int numFiles, int maxEvents,
+                    const char* collisionType, const char* outputPath) {
+
+    // Convert C-string parameters to std::string for ease of use.
+    std::string energyConfigStr = energyConfig;
+    std::string collisionTypeStr = collisionType;
+    std::string outputPathStr = outputPath;
     
-    // Parse command-line arguments.
-    std::string energyConfig = argv[1];
-    int numFiles = std::stoi(argv[2]);
-    int maxEvents = std::stoi(argv[3]);
-    std::string collisionType = argv[4];
-    std::string outputPath = argv[5];
-    
-    // Parse energy configuration (e.g., "10x100").
-    size_t pos = energyConfig.find("x");
+    // Parse the energy configuration (expected in NxM format, e.g., "10x100").
+    size_t pos = energyConfigStr.find("x");
     if (pos == std::string::npos) {
-        std::cerr << "Invalid energy configuration format. Expected format: NxM (e.g., 10x100)" << std::endl;
-        return 1;
+        cerr << "Invalid energy configuration format. Expected format: NxM (e.g., 10x100)" << endl;
+        return;
     }
-    int beamEnergy1 = std::stoi(energyConfig.substr(0, pos));
-    int beamEnergy2 = std::stoi(energyConfig.substr(pos + 1));
-    
-    // Determine input CSV file based on collision type.
+    int beamEnergy1 = std::stoi(energyConfigStr.substr(0, pos));
+    int beamEnergy2 = std::stoi(energyConfigStr.substr(pos + 1));
+    // (Optionally, you can print or use the beam energies if needed)
+    cout << "Parsed beam energies: " << beamEnergy1 << " and " << beamEnergy2 << endl;
+
+    // Determine the input CSV file based on the collision type.
     std::string inputCSV;
-    if (collisionType == "ep") {
+    if (collisionTypeStr == "ep") {
         inputCSV = "src/eicQuickSim/ep_files.csv";
-    } else if (collisionType == "en") {
+    } else if (collisionTypeStr == "en") {
         inputCSV = "src/eicQuickSim/en_files.csv";
     } else {
-        std::cerr << "Invalid collision type. Expected 'ep' or 'en'." << std::endl;
-        return 1;
+        cerr << "Invalid collision type. Expected 'ep' or 'en'." << endl;
+        return;
     }
     
-    // Step 1: Construct the FileManager.
+    // Construct a FileManager to handle the CSV.
     FileManager fm(inputCSV);
-    auto rows = CombinedRowsProcessor::getCombinedRows(energyConfig, numFiles, maxEvents, collisionType);
-    std::cout << "Combined " << rows.size() << " CSV rows." << std::endl;
     
-    // Step 3: Get Q² weights.
-    std::string lumiFile = "";
-    if (collisionType == "ep"){
+    // Get the combined rows based on energy configuration, number of files, and max events.
+    auto rows = CombinedRowsProcessor::getCombinedRows(energyConfigStr, numFiles, maxEvents, collisionTypeStr);
+    cout << "Combined " << rows.size() << " CSV rows." << endl;
+    
+    // Determine the luminosity file based on collision type.
+    std::string lumiFile;
+    if (collisionTypeStr == "ep") {
         lumiFile = "src/eicQuickSim/ep_lumi.csv";
-    }else{
+    } else {
         lumiFile = "src/eicQuickSim/en_lumi.csv";
     }
-
+    
+    // Create a Weights object using the combined rows and the luminosity file.
     Weights q2Weights(rows, WeightInitMethod::LUMI_CSV, lumiFile);
-
-    // Write the CSV with weights to the user-specified output path.
-    if (!q2Weights.exportCSVWithWeights(rows, outputPath)) {
-        std::cerr << "Failed to export CSV with weights." << std::endl;
-        return 1;
+    
+    // Export the CSV with computed weights.
+    if (!q2Weights.exportCSVWithWeights(rows, outputPathStr)) {
+        cerr << "Failed to export CSV with weights." << endl;
+        return;
     }
     
-    cout << "Successfully exported CSV with weights to " << outputPath << endl;
-    return 0;
+    cout << "Successfully exported CSV with weights to " << outputPathStr << endl;
 }

@@ -18,6 +18,7 @@ Weights::Weights(const std::vector<CSVRow>& combinedRows, WeightInitMethod initM
 {
     // Mode 3: PRECALCULATED weights.
     if (initMethod_ == WeightInitMethod::PRECALCULATED) {
+        std::cout << csvFilename << std::endl;
         loadPrecalculatedWeights(csvFilename);
         weightsWereProvided = true;
         return;

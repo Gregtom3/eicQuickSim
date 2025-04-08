@@ -1,7 +1,9 @@
 #include "Analysis.h"
+#include "TreeManager.h"
 #include <iostream>
 #include <cctype>
 #include <algorithm>
+#include <yaml-cpp/yaml.h>
 
 namespace eicQuickSim {
 
@@ -98,12 +100,45 @@ void Analysis::autoSetDihadValueFunction() {
 
 Analysis::Analysis() 
     : m_maxEvents(0), m_sidispid(0), m_dihad_pid1(0), m_dihad_pid2(0),
+      m_treeManager(nullptr),
       m_q2Weights(nullptr), m_binScheme(nullptr)
 {}
 
 Analysis::~Analysis() {
     if(m_q2Weights) delete m_q2Weights;
     if(m_binScheme) delete m_binScheme;
+    if(m_treeManager) delete m_treeManager;
+}
+
+
+void Analysis::initFromYaml(const std::string& yamlFile) {
+    try {
+        YAML::Node config = YAML::LoadFile(yamlFile);
+        // Read keys from the YAML file and set member variables.
+        m_analysisType    = config["analysis_type"].as<std::string>();
+        m_energyConfig    = config["energy_config"].as<std::string>();
+        m_csvSource       = config["csv_source"].as<std::string>();
+        setCSVSource(m_csvSource);
+        m_maxEvents       = config["max_events"].as<int>();
+        m_collisionType   = config["collision_type"].as<std::string>();
+        m_binningSchemePath = config["binning_scheme"].as<std::string>();
+        m_outputCSV       = config["output_csv"].as<std::string>();
+
+        // Set additional parameters if needed.
+        if(m_analysisType == "SIDIS" && config["sidis_pid"]) {
+            m_sidispid = config["sidis_pid"].as<int>();
+        } else if(m_analysisType == "DISIDIS" && config["disidispid1"] && config["disidispid2"]) {
+            m_dihad_pid1 = config["disidispid1"].as<int>();
+            m_dihad_pid2 = config["disidispid2"].as<int>();
+        }
+        std::cout << "Loaded YAML configuration from " << yamlFile << std::endl;
+    } catch(const std::exception &e) {
+        std::cerr << "Error reading YAML file " << yamlFile << ": " << e.what() << std::endl;
+    }
+}
+
+void Analysis::enableTreeOutput(const std::string& treeOutputFile) {
+    m_treeManager = new TreeManager(treeOutputFile, m_analysisType);
 }
 
 void Analysis::setAnalysisType(const std::string& analysisType) {
@@ -259,6 +294,9 @@ void Analysis::run() {
                 eventWeight = m_q2Weights->getWeight(dis.Q2);
                 std::vector<double> values = m_disValueFunction(dis);
                 m_binScheme->addEvent(values, eventWeight);
+                if(m_treeManager) {
+                    m_treeManager->fillDIS(dis, eventWeight);
+                }
             }
             else if(m_analysisType == "SIDIS") {
                 kin.computeSIDIS(evt, m_sidispid);
@@ -268,6 +306,9 @@ void Analysis::run() {
                 for(auto& sid : sidis) {
                     std::vector<double> values = m_sidisValueFunction(sid);
                     m_binScheme->addEvent(values, eventWeight);
+                    if(m_treeManager) {
+                        m_treeManager->fillSIDIS(sid, eventWeight);
+                    }
                 }
             }
             else if(m_analysisType == "DISIDIS") {
@@ -278,6 +319,9 @@ void Analysis::run() {
                 for(auto& dih : dihad) {
                     std::vector<double> values = m_dihadValueFunction(dih);
                     m_binScheme->addEvent(values, eventWeight);
+                    if(m_treeManager) {
+                        m_treeManager->fillDISIDIS(dih, eventWeight);
+                    }
                 }
             }
             else {
@@ -312,6 +356,14 @@ void Analysis::end() {
         std::cout << "Saved binned scaled event counts to " << m_outputCSV << std::endl;
     } catch(const std::exception &ex) {
         std::cerr << "Error saving CSV: " << ex.what() << std::endl;
+    }
+    if(m_treeManager) {
+        try {
+            m_treeManager->saveTree();
+            std::cout << "Saved TTree to file via TreeManager." << std::endl;
+        } catch(const std::exception &ex) {
+            std::cerr << "Error saving TTree: " << ex.what() << std::endl;
+        }
     }
 }
 

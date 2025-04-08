@@ -6,6 +6,7 @@
 #include <functional>
 #include "FileManager.h"
 #include "Kinematics.h"
+#include "TreeManager.h"
 #include "Weights.h"
 #include "BinningScheme.h"
 #include "CombinedRowsProcessor.h"
@@ -20,7 +21,7 @@ class Analysis {
 public:
     Analysis();
     ~Analysis();
-
+    void initFromYaml(const std::string& yamlFile);
     // Setters for each parameter.
     void setAnalysisType(const std::string& analysisType);
     void setEnergyConfig(const std::string& energyConfig);
@@ -40,6 +41,8 @@ public:
     // For DISIDIS: set a custom value function that extracts a vector<double> from dihadronKinematics.
     void setDihadValueFunction(std::function<std::vector<double>(const dihadronKinematics&)> func);
 
+    void enableTreeOutput(const std::string& treeOutputFile);
+    
     // Run the analysis (process events) and then call end() to save the CSV.
     void run();
     void end();
@@ -71,6 +74,7 @@ private:
     std::vector<CSVRow> m_combinedRows;
     Weights* m_q2Weights;
     BinningScheme* m_binScheme;
+    TreeManager* m_treeManager;
 
     // Internal functions.
     bool checkInputs() const;
