@@ -11,6 +11,7 @@ Kinematics::Kinematics() {
     disKin_.Q2 = 0;
     disKin_.x  = 0;
     disKin_.W  = 0;
+    disKin_.y  = 0;
 }
 
 TLorentzVector Kinematics::buildFourVector(const std::shared_ptr<const HepMC3::GenParticle>& particle) {
@@ -20,7 +21,8 @@ TLorentzVector Kinematics::buildFourVector(const std::shared_ptr<const HepMC3::G
                    particle->momentum().pz(),
                    particle->momentum().e());
     return vec;
-}
+}// Calculate z for a hadron.
+static double z(const TLorentzVector& q, const TLorentzVector& h, const TLorentzVector& pIn);
 
 std::vector<std::shared_ptr<const HepMC3::GenParticle>>
 Kinematics::searchParticle(const HepMC3::GenEvent& evt, int status, int pid) {
@@ -55,6 +57,7 @@ void Kinematics::computeDIS(const HepMC3::GenEvent& evt) {
     disKin_.x = (denominator != 0.0) ? disKin_.Q2 / denominator : 0.0;
     double W2 = (disKin_.pIn + disKin_.q).M2();
     disKin_.W = (W2 > 0.0) ? std::sqrt(W2) : 0.0;
+    disKin_.y = pIn*q/(eIn*pIn);
 }
 
 double Kinematics::xF(const TLorentzVector& q, const TLorentzVector& h,
@@ -112,6 +115,7 @@ void Kinematics::computeSIDIS(const HepMC3::GenEvent& evt, int pid) {
         sidisKinematics sid;
         TLorentzVector hadron = buildFourVector(particle);
         sid.x      = disKin_.x;
+        sid.y      = disKin_.y;
         sid.Q2     = disKin_.Q2;
         sid.xF     = xF(disKin_.q, hadron, disKin_.pIn, disKin_.W);
         sid.eta    = eta(hadron);
@@ -146,6 +150,7 @@ void Kinematics::computeDISIDS(const HepMC3::GenEvent& evt, int pid1, int pid2) 
                 // Event kinematics
                 dih.x = disKin_.x;
                 dih.Q2 = disKin_.Q2;
+                dih.y  = disKin_.y;
                 // Individual hadron kinematics.
                 dih.z1 = z(disKin_.q, p1, disKin_.pIn);
                 dih.z2 = z(disKin_.q, p2, disKin_.pIn);
@@ -176,6 +181,7 @@ void Kinematics::computeDISIDS(const HepMC3::GenEvent& evt, int pid1, int pid2) 
                 dihadronKinematics dih;
                 dih.x = disKin_.x;
                 dih.Q2 = disKin_.Q2;
+                dih.y  = disKin_.y;
                 dih.z1 = z(disKin_.q, p1, disKin_.pIn);
                 dih.z2 = z(disKin_.q, p2, disKin_.pIn);
                 dih.pT_lab_1 = pT_lab(p1);

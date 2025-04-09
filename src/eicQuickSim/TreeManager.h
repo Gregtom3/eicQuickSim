@@ -34,11 +34,13 @@ private:
     // Variables for DIS analysis.
     double m_dis_Q2;
     double m_dis_x;
+    double m_dis_y;   
     double m_dis_W;
 
     // Variables for SIDIS analysis.
     double m_sidis_Q2;
     double m_sidis_x;
+    double m_sidis_y;   
     double m_sidis_xF;
     double m_sidis_eta;
     double m_sidis_z;
@@ -49,6 +51,7 @@ private:
     // Variables for DISIDIS analysis.
     double m_dihad_Q2;
     double m_dihad_x;
+    double m_dihad_y;  
     double m_dihad_z_pair;
     double m_dihad_phi_h;
     double m_dihad_phi_R_method0;
@@ -58,7 +61,6 @@ private:
     double m_dihad_xF_pair;
     double m_dihad_com_th;
     double m_dihad_Mh;
-    
 };
 
 #endif // TREEMANAGER_H

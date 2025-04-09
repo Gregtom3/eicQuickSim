@@ -15,6 +15,7 @@ struct disKinematics {
     TLorentzVector pIn;  // initial hadron (target)
     TLorentzVector q;    // virtual photon momentum (eIn - eOut)
     double Q2;           // -q^2
+    double y;            // inelasticity
     double x;            // Bjorken x
     double W;            // invariant mass of hadronic system
 };
@@ -23,6 +24,7 @@ struct disKinematics {
 struct sidisKinematics {
     double Q2;           // -q^2
     double x;            // Bjorken x
+    double y;            // inelasticity
     double xF;     // Feynman xF
     double eta;    // pseudorapidity
     double z;      // energy fraction
@@ -35,6 +37,7 @@ struct sidisKinematics {
 struct dihadronKinematics {
     double Q2;           // -q^2
     double x;            // Bjorken x
+    double y;            // inelasticity
     // Pair-level quantities.
     double z_pair;
     double phi_h;

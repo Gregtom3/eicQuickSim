@@ -6,11 +6,14 @@ TreeManager::TreeManager(const std::string& outputFile, const std::string& analy
       m_tree(nullptr),
       m_analysisType(analysisType),
       m_weight(0.0),
-      m_dis_Q2(0.0), m_dis_x(0.0), m_dis_W(0.0),
-      m_sidis_Q2(0.0), m_sidis_x(0.0), m_sidis_xF(0.0),
+      // DIS variables
+      m_dis_Q2(0.0), m_dis_x(0.0), m_dis_y(0.0), m_dis_W(0.0),
+      // SIDIS variables
+      m_sidis_Q2(0.0), m_sidis_x(0.0), m_sidis_y(0.0), m_sidis_xF(0.0),
       m_sidis_eta(0.0), m_sidis_z(0.0), m_sidis_phi(0.0),
       m_sidis_pt_lab(0.0), m_sidis_pt_com(0.0),
-      m_dihad_Q2(0.0), m_dihad_x(0.0), m_dihad_z_pair(0.0),
+      // DISIDIS variables
+      m_dihad_Q2(0.0), m_dihad_x(0.0), m_dihad_y(0.0), m_dihad_z_pair(0.0),
       m_dihad_phi_h(0.0), m_dihad_phi_R_method0(0.0), m_dihad_phi_R_method1(0.0),
       m_dihad_pt_lab_pair(0.0), m_dihad_pt_com_pair(0.0),
       m_dihad_xF_pair(0.0), m_dihad_com_th(0.0), m_dihad_Mh(0.0)
@@ -29,12 +32,14 @@ TreeManager::TreeManager(const std::string& outputFile, const std::string& analy
     if(m_analysisType == "DIS") {
         m_tree->Branch("Q2", &m_dis_Q2, "Q2/D");
         m_tree->Branch("x", &m_dis_x, "x/D");
+        m_tree->Branch("y", &m_dis_y, "y/D");
         m_tree->Branch("W", &m_dis_W, "W/D");
         m_tree->Branch("weight", &m_weight, "weight/D");
     }
     else if(m_analysisType == "SIDIS") {
         m_tree->Branch("Q2", &m_sidis_Q2, "Q2/D");
         m_tree->Branch("x", &m_sidis_x, "x/D");
+        m_tree->Branch("y", &m_sidis_y, "y/D");
         m_tree->Branch("xF", &m_sidis_xF, "xF/D");
         m_tree->Branch("eta", &m_sidis_eta, "eta/D");
         m_tree->Branch("z", &m_sidis_z, "z/D");
@@ -46,6 +51,7 @@ TreeManager::TreeManager(const std::string& outputFile, const std::string& analy
     else if(m_analysisType == "DISIDIS") {
         m_tree->Branch("Q2", &m_dihad_Q2, "Q2/D");
         m_tree->Branch("x", &m_dihad_x, "x/D");
+        m_tree->Branch("y", &m_dihad_y, "y/D");
         m_tree->Branch("z_pair", &m_dihad_z_pair, "z_pair/D");
         m_tree->Branch("phi_h", &m_dihad_phi_h, "phi_h/D");
         m_tree->Branch("phi_R_method0", &m_dihad_phi_R_method0, "phi_R_method0/D");
@@ -73,6 +79,7 @@ void TreeManager::fillDIS(const eicQuickSim::disKinematics& dis, double weight) 
     if (m_analysisType != "DIS") return;
     m_dis_Q2 = dis.Q2;
     m_dis_x  = dis.x;
+    m_dis_y  = dis.y; 
     m_dis_W  = dis.W;
     m_weight = weight;
     m_tree->Fill();
@@ -82,6 +89,7 @@ void TreeManager::fillSIDIS(const eicQuickSim::sidisKinematics& sid, double weig
     if (m_analysisType != "SIDIS") return;
     m_sidis_Q2      = sid.Q2;
     m_sidis_x       = sid.x;
+    m_sidis_y       = sid.y; 
     m_sidis_xF      = sid.xF;
     m_sidis_eta     = sid.eta;
     m_sidis_z       = sid.z;
@@ -96,6 +104,7 @@ void TreeManager::fillDISIDIS(const eicQuickSim::dihadronKinematics& dih, double
     if (m_analysisType != "DISIDIS") return;
     m_dihad_Q2             = dih.Q2;
     m_dihad_x              = dih.x;
+    m_dihad_y              = dih.y; 
     m_dihad_z_pair         = dih.z_pair;
     m_dihad_phi_h          = dih.phi_h;
     m_dihad_phi_R_method0  = dih.phi_R_method0;
@@ -118,4 +127,3 @@ void TreeManager::saveTree() {
     m_tree->Write();
     std::cout << "TreeManager: TTree written to file successfully." << std::endl;
 }
-
