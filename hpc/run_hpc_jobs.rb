@@ -383,3 +383,5 @@ puts "All analysis jobs processed for project '#{project_name}'."
 puts "SLURM job submission commands have been saved to #{run_jobs_file}."
 puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
 
+first_line = File.foreach(run_jobs_file).first.chomp  # chomp removes trailing newline
+puts "\nFor testing --- Run #{first_line}"
