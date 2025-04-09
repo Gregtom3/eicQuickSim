@@ -352,7 +352,7 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
     f.puts "#SBATCH --error=#{slurm_error}"
     f.puts ""
     f.puts "cd #{Dir.pwd}"
-    f.puts "#{shell_script}"
+    f.puts "../eic-shell3/eic-shell -- #{shell_script}"
     end
 
     File.open(shell_script, "w") do |f|
