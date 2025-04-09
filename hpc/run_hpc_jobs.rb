@@ -227,7 +227,7 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
 
     # Create per-batch YAML configuration file.
     yaml_config = {
-      "analysis_type"  => "DIS",  # Adjust if a different analysis type is needed.
+      "analysis_type"  => "#{analysis_type}", 
       "energy_config"  => energy_config,
       "csv_source"     => File.expand_path(input_csv),
       "max_events"     => max_event,
