@@ -254,30 +254,20 @@ puts "CSV splitting completed successfully for project '#{project_name}'!"
 # -------------------------
 # Analysis Job Submission
 # -------------------------
-# Determine whether to run via SLURM (unless disabled).
-slurm_available = system("which sbatch > /dev/null 2>&1")
-use_slurm = slurm_available && !options[:no_slurm]
 
-if use_slurm
-  puts "SLURM found. Job submission commands will be written to a file instead of immediately submitted."
-else
-  puts "SLURM not found or disabled. Jobs will be run locally."
+timestamp   = Time.now.strftime("%Y-%m-%d___%H-%M-%S")
+slurm_dir   = File.join("hpc", "slurm", timestamp)
+slurm_logdir = File.join(slurm_dir, "log")
+FileUtils.mkdir_p(slurm_dir)
+FileUtils.mkdir_p(slurm_logdir)
+puts "Created SLURM log directory: #{slurm_dir}"
+
+# Create the run_jobs.sh file in the base project directory.
+run_jobs_file = File.join(base_dir, "run_jobs.sh")
+File.open(run_jobs_file, "w") do |file|
+file.puts "#!/bin/bash"
 end
 
-if use_slurm
-  timestamp   = Time.now.strftime("%Y-%m-%d___%H-%M-%S")
-  slurm_dir   = File.join("hpc", "slurm", timestamp)
-  slurm_logdir = File.join(slurm_dir, "log")
-  FileUtils.mkdir_p(slurm_dir)
-  FileUtils.mkdir_p(slurm_logdir)
-  puts "Created SLURM log directory: #{slurm_dir}"
-  
-  # Create the run_jobs.sh file in the base project directory.
-  run_jobs_file = File.join(base_dir, "run_jobs.sh")
-  File.open(run_jobs_file, "w") do |file|
-    file.puts "#!/bin/bash"
-  end
-end
 
 # Set the analysis macro file based on the analysis type.
 macro = case analysis_type
@@ -340,58 +330,53 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
 
     root_cmd = %Q{root -l -b -q '#{macro}\(#{cmd_params}\)'}
 
-    if use_slurm
-      # SLURM job parameters.
-      ACCOUNT = "clas12"
-      PARTITION = "production"
-      MEM_PER_CPU = 4000    # in MB
-      CPUS_PER_TASK = 1
-      TIME_LIMIT = "24:00:00"
 
-      slurm_job_name = job_name
-      slurm_output = File.join(slurm_logdir, "#{slurm_job_name}.out")
-      slurm_error  = File.join(slurm_logdir, "#{slurm_job_name}.err")
-      slurm_script = File.join(slurm_dir, "#{job_name}.slurm")
-      shell_script = File.join(slurm_dir, "#{job_name}.sh")
+    # SLURM job parameters.
+    ACCOUNT = "clas12"
+    PARTITION = "production"
+    MEM_PER_CPU = 4000    # in MB
+    CPUS_PER_TASK = 1
+    TIME_LIMIT = "24:00:00"
 
-      File.open(slurm_script, "w") do |f|
-        f.puts "#!/bin/bash"
-        f.puts "#SBATCH --account=#{ACCOUNT}"
-        f.puts "#SBATCH --partition=#{PARTITION}"
-        f.puts "#SBATCH --mem-per-cpu=#{MEM_PER_CPU}"
-        f.puts "#SBATCH --job-name=#{slurm_job_name}"
-        f.puts "#SBATCH --cpus-per-task=#{CPUS_PER_TASK}"
-        f.puts "#SBATCH --time=#{TIME_LIMIT}"
-        f.puts "#SBATCH --output=#{slurm_output}"
-        f.puts "#SBATCH --error=#{slurm_error}"
-        f.puts ""
-        f.puts "cd #{Dir.pwd}"
-        f.puts "#{shell_script}"
-      end
+    slurm_job_name = job_name
+    slurm_output = File.join(slurm_logdir, "#{slurm_job_name}.out")
+    slurm_error  = File.join(slurm_logdir, "#{slurm_job_name}.err")
+    slurm_script = File.join(slurm_dir, "#{job_name}.slurm")
+    shell_script = File.join(slurm_dir, "#{job_name}.sh")
 
-      File.open(shell_script, "w") do |f|
-        f.puts "#!/bin/bash"
-        f.puts "cd #{Dir.pwd}"
-        f.puts "#{root_cmd}"
-      end
+    File.open(slurm_script, "w") do |f|
+    f.puts "#!/bin/bash"
+    f.puts "#SBATCH --account=#{ACCOUNT}"
+    f.puts "#SBATCH --partition=#{PARTITION}"
+    f.puts "#SBATCH --mem-per-cpu=#{MEM_PER_CPU}"
+    f.puts "#SBATCH --job-name=#{slurm_job_name}"
+    f.puts "#SBATCH --cpus-per-task=#{CPUS_PER_TASK}"
+    f.puts "#SBATCH --time=#{TIME_LIMIT}"
+    f.puts "#SBATCH --output=#{slurm_output}"
+    f.puts "#SBATCH --error=#{slurm_error}"
+    f.puts ""
+    f.puts "cd #{Dir.pwd}"
+    f.puts "#{shell_script}"
+    end
 
-      FileUtils.chmod("+x", slurm_script)
-      FileUtils.chmod("+x", shell_script)
+    File.open(shell_script, "w") do |f|
+    f.puts "#!/bin/bash"
+    f.puts "cd #{Dir.pwd}"
+    f.puts "#{root_cmd}"
+    end
 
-      puts "Adding SLURM job command for #{job_name} for batch #{batch_id} using YAML #{yaml_config}..."
-      # Instead of immediately submitting the job, append the sbatch command to run_jobs.sh.
-      File.open(run_jobs_file, "a") do |f|
-        f.puts "sbatch #{slurm_script}"
-      end
-    else
-      puts "Running job #{job_name} for batch #{batch_id} locally using YAML #{yaml_config}..."
-      system(root_cmd)
+    FileUtils.chmod("+x", slurm_script)
+    FileUtils.chmod("+x", shell_script)
+
+    puts "Adding SLURM job command for #{job_name} for batch #{batch_id} using YAML #{yaml_config}..."
+    # Instead of immediately submitting the job, append the sbatch command to run_jobs.sh.
+    File.open(run_jobs_file, "a") do |f|
+    f.puts "sbatch #{slurm_script}"
     end
   end
 end
 
 puts "All analysis jobs processed for project '#{project_name}'."
-if use_slurm
-  puts "SLURM job submission commands have been saved to #{run_jobs_file}."
-  puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
-end
+puts "SLURM job submission commands have been saved to #{run_jobs_file}."
+puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
+
