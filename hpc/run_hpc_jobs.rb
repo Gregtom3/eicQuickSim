@@ -382,9 +382,9 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
   end
 end
 
-puts "All analysis jobs processed for project '#{project_name}'."
+puts "All analysis jobs processed for project '#{project_name}'.\n\n"
 puts "SLURM job submission commands have been saved to #{run_jobs_file}."
-puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
+puts "To submit all jobs, run: \n\n bash #{run_jobs_file} OUTSIDE OF EIC-SHELL\n\n"
 
 last_line = File.readlines(current_slurm_script).last.chomp
 if match = last_line.match(/(hpc\/.*)/)
