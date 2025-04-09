@@ -37,7 +37,7 @@ options = {
   pid2: nil          # for DISIDIS
 }
 
-OptionParser.new do |opts|
+opts = OptionParser.new do |opts|
   opts.banner = "Usage: run_project_analysis.rb -n <project name> -f <nrows per batch> [options]"
 
   opts.on("-n NAME", "--name=NAME", "Project name (required)") do |name|
@@ -72,7 +72,15 @@ OptionParser.new do |opts|
     puts opts
     exit
   end
-end.parse!
+end
+
+begin
+    opts.parse!
+  rescue OptionParser::ParseError => e
+    puts e.message
+    puts opts
+    exit 1
+  end
 
 # -------------------------
 # Validate Required Options

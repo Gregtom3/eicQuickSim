@@ -41,7 +41,6 @@ end
 
 if options[:name].nil? || options[:name].strip.empty?
   puts "Error: You must specify a project name with the -n option."
-  puts opts
   exit 1
 end
 
