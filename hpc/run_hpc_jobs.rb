@@ -233,8 +233,8 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
       "max_events"     => max_event,
       "collision_type" => collision_type,
       "binning_scheme" => "src/bins/example.yaml",
-      "output_csv"     => File.join(csv_dir, "analysis_#{analysis_type}_#{collision_type}_#{energy_config}_batch#{batch_index}.csv")
-      "output_tree"     => File.join(root_dir, "analysis_#{analysis_type}_#{collision_type}_#{energy_config}_batch#{batch_index}.root")
+      "output_csv"     => File.join(csv_dir, "analysis_#{analysis_type}_#{collision_type}_#{energy_config}_batch#{batch_index}.csv"),
+      "output_tree"    => File.join(root_dir, "analysis_#{analysis_type}_#{collision_type}_#{energy_config}_batch#{batch_index}.root")
     }
     batch_yaml_file = File.join(batch_dir, "batch#{batch_index}_config.yaml")
     File.open(batch_yaml_file, "w") { |file| file.write(YAML.dump(yaml_config)) }
