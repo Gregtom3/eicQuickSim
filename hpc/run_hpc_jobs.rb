@@ -113,6 +113,13 @@ project_name = options[:name].strip
 n_per_job    = options[:num_files]
 analysis_type = options[:analysis]
 
+# SLURM job parameters.
+ACCOUNT = "clas12"
+PARTITION = "production"
+MEM_PER_CPU = 2000    # in MB
+CPUS_PER_TASK = 1
+TIME_LIMIT = "24:00:00"
+
 # -------------------------
 # Verify Project Directory
 # -------------------------
@@ -327,12 +334,7 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
     root_cmd = %Q{root -l -b -q '#{macro}\(#{cmd_params}\)'}
 
 
-    # SLURM job parameters.
-    ACCOUNT = "clas12"
-    PARTITION = "production"
-    MEM_PER_CPU = 4000    # in MB
-    CPUS_PER_TASK = 1
-    TIME_LIMIT = "24:00:00"
+
 
     slurm_job_name = job_name
     slurm_output = File.join(slurm_logdir, "#{slurm_job_name}.out")
