@@ -386,5 +386,5 @@ puts "All analysis jobs processed for project '#{project_name}'."
 puts "SLURM job submission commands have been saved to #{run_jobs_file}."
 puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
 
-last_line = File.foreach(current_slurm_script).last.chomp
+last_line = File.readlines(current_slurm_script).last.chomp
 puts "\nFor testing --- Run #{last_line}"
