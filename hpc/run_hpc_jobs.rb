@@ -87,21 +87,25 @@ begin
 # -------------------------
 if options[:name].nil? || options[:name].strip.empty?
   puts "Error: You must specify a project name with -n."
+  puts opts
   exit 1
 end
 
 if options[:num_files].nil? || options[:num_files] <= 0
   puts "Error: You must specify a positive number of rows with -f."
+  puts opts
   exit 1
 end
 
 if options[:analysis] == "SIDIS" && options[:pid].nil?
   puts "Error: For SIDIS analysis, you must specify --pid."
+  puts opts
   exit 1
 end
 
 if options[:analysis] == "DISIDIS" && (options[:pid1].nil? || options[:pid2].nil?)
   puts "Error: For DISIDIS analysis, you must specify both --pid1 and --pid2."
+  puts opts
   exit 1
 end
 
