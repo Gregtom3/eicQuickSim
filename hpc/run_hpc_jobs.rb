@@ -2,8 +2,8 @@
 # run_project_analysis.rb
 #
 # This combined script first splits your CSV files into batch files
-# (and writes per-batch YAML config files) and then submits analysis jobs
-# (either locally or via SLURM) for each batch.
+# (and writes per-batch YAML config files) and then creates job submission
+# commands (either locally or for SLURM) for each batch.
 #
 # Usage:
 #   run_project_analysis.rb -n <project name> -f <nrows per batch> [options]
@@ -75,12 +75,12 @@ opts = OptionParser.new do |opts|
 end
 
 begin
-    opts.parse!
-  rescue OptionParser::ParseError => e
-    puts e.message
-    puts opts
-    exit 1
-  end
+  opts.parse!
+rescue OptionParser::ParseError => e
+  puts e.message
+  puts opts
+  exit 1
+end
 
 # -------------------------
 # Validate Required Options
@@ -259,7 +259,7 @@ slurm_available = system("which sbatch > /dev/null 2>&1")
 use_slurm = slurm_available && !options[:no_slurm]
 
 if use_slurm
-  puts "SLURM found. Jobs will be submitted to SLURM."
+  puts "SLURM found. Job submission commands will be written to a file instead of immediately submitted."
 else
   puts "SLURM not found or disabled. Jobs will be run locally."
 end
@@ -271,6 +271,12 @@ if use_slurm
   FileUtils.mkdir_p(slurm_dir)
   FileUtils.mkdir_p(slurm_logdir)
   puts "Created SLURM log directory: #{slurm_dir}"
+  
+  # Create the run_jobs.sh file in the base project directory.
+  run_jobs_file = File.join(base_dir, "run_jobs.sh")
+  File.open(run_jobs_file, "w") do |file|
+    file.puts "#!/bin/bash"
+  end
 end
 
 # Set the analysis macro file based on the analysis type.
@@ -372,8 +378,11 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
       FileUtils.chmod("+x", slurm_script)
       FileUtils.chmod("+x", shell_script)
 
-      puts "Submitting SLURM job #{job_name} for batch #{batch_id} using YAML #{yaml_config}..."
-      system("sbatch #{slurm_script}")
+      puts "Adding SLURM job command for #{job_name} for batch #{batch_id} using YAML #{yaml_config}..."
+      # Instead of immediately submitting the job, append the sbatch command to run_jobs.sh.
+      File.open(run_jobs_file, "a") do |f|
+        f.puts "sbatch #{slurm_script}"
+      end
     else
       puts "Running job #{job_name} for batch #{batch_id} locally using YAML #{yaml_config}..."
       system(root_cmd)
@@ -381,7 +390,8 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
   end
 end
 
-puts "All analysis jobs submitted (or executed) for project '#{project_name}'."
+puts "All analysis jobs processed for project '#{project_name}'."
 if use_slurm
-  puts "SLURM logs and scripts are stored in #{slurm_dir}."
+  puts "SLURM job submission commands have been saved to #{run_jobs_file}."
+  puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
 end
