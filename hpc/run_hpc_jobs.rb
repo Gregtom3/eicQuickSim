@@ -387,4 +387,9 @@ puts "SLURM job submission commands have been saved to #{run_jobs_file}."
 puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
 
 last_line = File.readlines(current_slurm_script).last.chomp
-puts "\nFor testing --- Run #{last_line}"
+if match = last_line.match(/(hpc\/.*)/)
+    puts match[1]
+  else
+    puts "Pattern not found"
+  end
+puts "\nFor testing --- Run... \n\n bash #{last_line}\n\n"
