@@ -57,7 +57,7 @@ void Kinematics::computeDIS(const HepMC3::GenEvent& evt) {
     disKin_.x = (denominator != 0.0) ? disKin_.Q2 / denominator : 0.0;
     double W2 = (disKin_.pIn + disKin_.q).M2();
     disKin_.W = (W2 > 0.0) ? std::sqrt(W2) : 0.0;
-    disKin_.y = pIn*q/(eIn*pIn);
+    disKin_.y = disKin_.pIn*disKin_.q/(disKin_.eIn*disKin_.pIn);
 }
 
 double Kinematics::xF(const TLorentzVector& q, const TLorentzVector& h,
