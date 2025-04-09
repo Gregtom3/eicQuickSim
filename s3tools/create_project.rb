@@ -10,7 +10,7 @@ options = {
   max_events: 1000
 }
 
-OptionParser.new do |opts|
+opts = OptionParser.new do |opts|
   opts.banner = "Usage: create_project.rb -n <project name> [options]"
   
   opts.on("-n NAME", "--name=NAME", "Project name (required)") do |n|
@@ -33,6 +33,7 @@ end.parse!
 
 if options[:name].nil? || options[:name].strip.empty?
   puts "Error: You must specify a project name with the -n option."
+  puts opts
   exit 1
 end
 
