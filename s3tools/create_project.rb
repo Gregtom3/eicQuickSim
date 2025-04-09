@@ -113,7 +113,8 @@ energy_configs.each do |energy_config|
       "max_events"     => max_events,
       "collision_type" => collision,
       "binning_scheme" => "src/bins/example.yaml",
-      "output_csv"     => File.join(config_dir, "analysis_DIS_#{collision}_#{energy_config}.csv")
+      "output_csv"     => File.join(config_dir, "analysis_#{collision}_#{energy_config}.csv")
+      "output_tree"     => File.join(config_dir, "analysis_#{collision}_#{energy_config}.root")
     }
 
     yaml_path = File.join(config_dir, "config.yaml")

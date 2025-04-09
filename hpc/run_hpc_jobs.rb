@@ -137,6 +137,10 @@ overwrite_batches_choice = nil
 Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
   next unless File.directory?(config_dir)
 
+  root_dir = File.join(config_dir, "root")
+  csv_dir = File.join(config_dir, "csv")
+  FileUtils.mkdir_p(root_dir)
+  FileUtils.mkdir_p(csv_dir)
   puts "Processing config directory: #{config_dir}"
 
   # Batches subdirectory in each configuration directory
@@ -229,7 +233,8 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
       "max_events"     => max_event,
       "collision_type" => collision_type,
       "binning_scheme" => "src/bins/example.yaml",
-      "output_csv"     => File.join(config_dir, "analysis_DIS_#{collision_type}_#{energy_config}_batch#{batch_index}.csv")
+      "output_csv"     => File.join(csv_dir, "analysis_#{analysis_type}_#{collision_type}_#{energy_config}_batch#{batch_index}.csv")
+      "output_tree"     => File.join(root_dir, "analysis_#{analysis_type}_#{collision_type}_#{energy_config}_batch#{batch_index}.root")
     }
     batch_yaml_file = File.join(batch_dir, "batch#{batch_index}_config.yaml")
     File.open(batch_yaml_file, "w") { |file| file.write(YAML.dump(yaml_config)) }

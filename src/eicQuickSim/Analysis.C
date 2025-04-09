@@ -123,7 +123,8 @@ void Analysis::initFromYaml(const std::string& yamlFile) {
         m_collisionType   = config["collision_type"].as<std::string>();
         m_binningSchemePath = config["binning_scheme"].as<std::string>();
         m_outputCSV       = config["output_csv"].as<std::string>();
-
+        enableTreeOutput(config["output_tree"].as<std::string>());
+        
         // Set additional parameters if needed.
         if(m_analysisType == "SIDIS" && config["sidis_pid"]) {
             m_sidispid = config["sidis_pid"].as<int>();
