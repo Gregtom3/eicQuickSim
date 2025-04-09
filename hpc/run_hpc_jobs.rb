@@ -310,11 +310,7 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
     job_name = "analysis_#{config_basename}_#{batch_id}"
 
     # Determine output directory for analysis results.
-    if use_slurm
-      out_dir = File.join(slurm_dir, "out", config_basename)
-    else
-      out_dir = File.join(config_dir, "analysis_out")
-    end
+    out_dir = File.join(slurm_dir, "out", config_basename)
     FileUtils.mkdir_p(out_dir)
     out_file = File.join(out_dir, "#{job_name}.csv")
 
