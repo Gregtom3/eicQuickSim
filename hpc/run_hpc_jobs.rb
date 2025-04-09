@@ -388,8 +388,8 @@ puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
 
 last_line = File.readlines(current_slurm_script).last.chomp
 if match = last_line.match(/(hpc\/.*)/)
-    puts match[1]
-  else
-    puts "Pattern not found"
-  end
-puts "\nFor testing --- Run... \n\n bash #{last_line}\n\n"
+    puts "\nFor testing --- Run... \n\n bash #{match[1]}\n\n"
+else
+    exit 
+end
+
