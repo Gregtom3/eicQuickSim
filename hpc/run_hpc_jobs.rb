@@ -291,6 +291,8 @@ macro = case analysis_type
           exit 1
         end
 
+current_slurm_script = ""
+
 Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
   next unless File.directory?(config_dir)
 
@@ -346,6 +348,7 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
     slurm_error  = File.join(slurm_logdir, "#{slurm_job_name}.err")
     slurm_script = File.join(slurm_dir, "#{job_name}.slurm")
     shell_script = File.join(slurm_dir, "#{job_name}.sh")
+    current_slurm_script = slurm_script
 
     File.open(slurm_script, "w") do |f|
     f.puts "#!/bin/bash"
@@ -383,5 +386,5 @@ puts "All analysis jobs processed for project '#{project_name}'."
 puts "SLURM job submission commands have been saved to #{run_jobs_file}."
 puts "To submit all jobs, run: bash #{run_jobs_file} OUTSIDE OF EIC-SHELL"
 
-first_line = File.foreach(run_jobs_file).first.chomp  # chomp removes trailing newline
+first_line = File.foreach(current_slurm_script).first.chomp  # chomp removes trailing newline
 puts "\nFor testing --- Run #{first_line}"
