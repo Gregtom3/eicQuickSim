@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 eicQuickSim/
 out/
-hpc/
+hpc/slurm
 # C extensions
 *.so
 
