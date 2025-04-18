@@ -116,8 +116,8 @@ analysis_type = options[:analysis]
 # SLURM job parameters.
 ACCOUNT = "clas12"
 PARTITION = "production"
-MEM_PER_CPU = 2000    # in MB
-CPUS_PER_TASK = 1
+MEM_PER_CPU = 4000    # in MB
+CPUS_PER_TASK = 2
 TIME_LIMIT = "24:00:00"
 
 # -------------------------
@@ -229,7 +229,7 @@ Dir.glob(File.join(base_dir, "config_*")).each do |config_dir|
     yaml_config = {
       "analysis_type"  => "#{analysis_type}", 
       "energy_config"  => energy_config,
-      "csv_source"     => File.expand_path(input_csv),
+      "csv_source"     => File.join(batch_dir, "batch#{batch_index}.csv"),
       "max_events"     => max_event,
       "collision_type" => collision_type,
       "binning_scheme" => "src/bins/example.yaml",

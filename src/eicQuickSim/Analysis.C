@@ -282,7 +282,10 @@ void Analysis::run() {
         
         int eventsParsed = 0;
         while(!root_input.failed() && eventsParsed < m_maxEvents) {
-            HepMC3::GenEvent evt;
+	  if(eventsParsed % 1000 == 0){
+	    std::cout<<eventsParsed<<" of "<<m_maxEvents << "(" << 100.0*eventsParsed/m_maxEvents << ")" << std::endl;
+	  }
+	    HepMC3::GenEvent evt;
             root_input.read_event(evt);
             if(root_input.failed()) break;
             eventsParsed++;
