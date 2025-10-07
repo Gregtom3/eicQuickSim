@@ -114,7 +114,7 @@ n_per_job    = options[:num_files]
 analysis_type = options[:analysis]
 
 # SLURM job parameters.
-ACCOUNT = "clas12"
+ACCOUNT = "eic"
 PARTITION = "production"
 MEM_PER_CPU = 4000    # in MB
 CPUS_PER_TASK = 2

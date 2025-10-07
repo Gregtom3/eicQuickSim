@@ -5,7 +5,8 @@ project(eicQuickSim)
 find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
-set(HEPMC3_LIB_DIR "/opt/software/linux-debian12-x86_64_v2/gcc-12.2.0/hepmc3-3.3.0-km7myoz2ff4yelux5c35wx3yhmaiggvj/lib")
+## set(HEPMC3_LIB_DIR "/opt/software/linux-debian13-x86_64_v2/gcc-14.2.0/hepmc3-3.3.0-wa3yu4leh5s3vhzfkw6tazbonfrohck4/lib")
+set(HEPMC3_LIB_DIR "/opt/software/linux-x86_64_v2/hepmc3-3.3.0-2cwd7xxymts7glit4hfooaythk2ft4yp/lib/")
 include_directories("${HEPMC3_LIB_DIR}/../include")
 include_directories(${CMAKE_SOURCE_DIR}/src/eicQuickSim)
 
