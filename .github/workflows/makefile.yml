@@ -108,6 +108,12 @@ jobs:
         make test08_weightHistDISIDIS
         EOF
 
+    - name: Run test09_binningScheme
+      run: |
+        ./eic-shell <<'EOF'
+        make test09_binningScheme
+        EOF
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:

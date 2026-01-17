@@ -8,7 +8,15 @@
 
 class BinningScheme {
 public:
-    // Each dimension corresponds to one entry in the YAML "dimensions" list.
+    // Define the two types of binning schemes.
+    enum class BinningType {
+        RECTANGULAR_YAML,
+        ND_CSV
+    };
+
+    // Each dimension (for YAML or CSV) carries a name and branch info.
+    // For YAML the "edges" are taken directly from the file.
+    // For CSV the edges are built as the unique sorted set of boundaries from the CSV.
     struct Dimension {
         std::string name;
         std::string branch_true;
@@ -16,44 +24,57 @@ public:
         std::vector<double> edges;
     };
 
-    // Constructor: reads a YAML file and parses the binning scheme.
-    BinningScheme(const std::string& yamlFilePath);
+    // Structure for an individually defined ND bin (CSV type).
+    struct ND_CSV_Bin {
+        std::vector<double> minEdges;  // One per dimension.
+        std::vector<double> maxEdges;  // One per dimension.
+    };
+
+    // Constructor: reads a file (YAML or CSV) and parses the binning scheme.
+    BinningScheme(const std::string& filePath, BinningType type = BinningType::RECTANGULAR_YAML);
 
     // Accessors.
     const std::string& getEnergyConfig() const;
     const std::vector<Dimension>& getDimensions() const;
 
     // Given a vector of values (one per dimension), returns a vector of bin indices.
-    // For each dimension, if the value is out of [edge0, last_edge) range, returns -1.
+    // For each dimension, if the value is out of range, returns -1.
     std::vector<int> findBins(const std::vector<double>& values) const;
 
     // Add an event to the internal bin counts.
-    // This method finds the appropriate bin (via findBins) and adds the given eventWeight.
-    // If any value is out of range (i.e. a bin index is -1), the event is skipped.
     void addEvent(const std::vector<double>& values, double eventWeight);
 
     // Save the internal binned event counts to a CSV file.
-    // The CSV file will have columns: for each dimension, two columns (e.g., Q2_min, Q2_max),
-    // followed by "scaled_events". The CSV will include all possible bins (even those with zero events).
+    // For YAML the CSV contains all rectangular bins,
+    // for CSV it writes one line per ND bin.
     void saveCSV(const std::string &outFilePath) const;
 
     // Utility: given a vector of bin indices, return a string key (e.g., "2_5").
     std::string makeBinKey(const std::vector<int>& bins) const;
 
+    // Get the file name (without directory and extension).
     std::string getSchemeName() const;
 
+    // Get the reconstructed branch names (one per dimension).
     std::vector<std::string> getReconstructedBranches() const;
     
 private:
-    std::string pathToBinScheme; // yaml
-    std::string energy_config;
+    std::string pathToBinScheme; // Path to input file (YAML or CSV)
+    std::string energy_config;   // For YAML, read from file. For CSV, may be set to a default.
     std::vector<Dimension> dimensions;
+
+    // For ND_CSV type: store the individual bin definitions.
+    std::vector<ND_CSV_Bin> csvBins_;
 
     // Internal storage of binned event counts.
     std::unordered_map<std::string, double> binCounts_;
 
-    // Helper to load and parse the YAML file.
-    void parseYAML(const std::string &yamlFilePath);
+    // Binning scheme type.
+    BinningType type_;
+
+    // Helpers to load and parse the input file.
+    void parseYAML(const std::string &filePath);
+    void parseCSV(const std::string &filePath);
 };
 
 #endif // BINNINGSCHEME_H
